@@ -44,7 +44,7 @@ button{font:inherit;cursor:pointer}
 .stat{display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex:none}
 .stat .l{font-size:clamp(9.5px,1.35vw,11px);color:var(--muted)}
 .stat .v{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
-#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#avg{min-width:1.7em}#oddsv{min-width:2.6em}
+#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#avg{min-width:1.7em}#oddsv{min-width:1.9em}
 @media (max-width:760px){.fw2{display:none}}
 .statbtn{background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
 .statbtn .chev{color:var(--gold);font-size:16px;line-height:1;margin-left:-2px}
@@ -205,8 +205,8 @@ canvas{display:block}
 </div>
 <div id="streakpanel" hidden role="dialog" aria-modal="true" aria-labelledby="streakh" class="panelwrap">
   <div class="fcard">
-    <h2 id="streakh">Dry spells</h2>
-    <p>A dry spell is a stretch of spins with no 0 or 00, counted from your own history. The current spell counts as one of them.</p>
+    <h2 id="streakh">Droughts</h2>
+    <p>A drought is a stretch of spins with no 0 or 00, counted from your own history. Every number here comes from finished droughts; the one you're in is shown for reference but not counted.</p>
     <table id="stksum"></table>
     <table class="stk" id="stktbl"></table>
     <div class="frow"><button class="ghost" id="streakclose">Close</button></div>
@@ -228,7 +228,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='29';
+const VERSION='30';
 const DEN=[1,5,10,25,50,100];
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
@@ -322,7 +322,7 @@ if(outEl[b.key]){d.style.left='50%';d.style.top='50%';outEl[b.key].appendChild(d
 $('bal').textContent=state.balance.toLocaleString();$('bet').textContent=tot.toLocaleString();
 let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;}$('streak').textContent=s;$('spins').textContent=state.hist.length.toLocaleString();
 const gs=greenStats();$('avg').textContent=gs.avg===null?'–':gs.avg.toFixed(1);$('avgnote').textContent=gs.avg===null?(state.hist.length?`(none in ${state.hist.length})`:'(19 fair)'):'(19 fair)';
-const ds=dryStats();if(ds.L===0){$('oddsl').textContent='Dry spells';$('oddsv').textContent=String(ds.runs.length);}else{$('oddsl').textContent=`Dry spells ≥${ds.L}`;$('oddsv').textContent=`${ds.reached} of ${ds.total}`;}
+const ds=dryStats();if(ds.L===0){$('oddsl').textContent='Droughts';$('oddsv').textContent=String(ds.runs.length);}else{$('oddsl').textContent=`Droughts ≥${ds.L}`;$('oddsv').textContent=Math.round(100*ds.everReached/ds.total)+'%';}
 $('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
 for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
 ['undo','clear','dbl','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
@@ -404,11 +404,11 @@ $('fairtbl').innerHTML=`<tr><td>Spins on this wheel</td><td>${N.toLocaleString()
 const v=$('fairverdict');if(N<100){v.textContent='Too few spins to judge the spread yet. About 100 spins gives a rough read, 200 or more a solid one.';v.className='verdict warn';}else if(p>=.05){v.textContent='Within the normal range for a fair wheel.';v.className='verdict';}else if(p>=.01){v.textContent='A little lumpy, but a fair wheel does this about 1 time in 20.';v.className='verdict warn';}else{v.textContent='Unusually lumpy for a fair wheel, about 1 time in 100 or rarer. Keep spinning; if it stays here, something is off.';v.className='verdict bad';}
 const ld=state.lastDraw;$('fairlast').innerHTML=ld&&ld.raw!==null&&ld.raw!==undefined?`Last draw: <span class="mono">${ld.raw.toLocaleString()}</span> mod 38 = <span class="mono">${ld.idx}</span>, so ${ld.idx===0?'the 0 pocket itself':'pocket '+ld.idx+' counting clockwise from 0'}: <span class="mono">${ld.n}</span>.`:'';}
 function fairFooter(){$('fairver').textContent=syncText();$('retrybtn').hidden=!HAS_RUNTIME||cloudStatus==='on'||cloudStatus==='connecting'||cloudStatus==='write failed';}
-function streakText(){const d=dryStats(),pc=(a,b)=>b?` (${Math.round(100*a/b)}%)`:'',all=d.runs.concat([d.L]),avg=d.runs.length?(d.runs.reduce((s,r)=>s+r,0)/d.runs.length):null;
-let s=`<tr><td>Dry spells so far, counting the current one</td><td>${d.total}</td></tr><tr><td>Current dry spell</td><td>${d.L} spin${d.L===1?'':'s'}</td></tr>`;
-if(d.L>0)s+=`<tr><td>Dry spells that reached ${d.L} or more, like this one</td><td>${d.reached} of ${d.total}${pc(d.reached,d.total)}</td></tr><tr><td>Fair wheel: dry spells that reach ${d.L} or more</td><td>${(d.theory*100).toFixed(1)}%</td></tr><tr><td>Times a green came on the very next spin after ${d.L} misses</td><td>${d.everReached?d.endedHere+' of '+d.everReached+pc(d.endedHere,d.everReached):'no data yet'}</td></tr>`;
-s+=`<tr><td>Longest dry spell</td><td>${d.longest}</td></tr><tr><td>Average length of finished dry spells, fair wheel 18.0</td><td>${avg===null?'–':avg.toFixed(1)}</td></tr>`;$('stksum').innerHTML=s;
-let t='<tr><th>Length</th><th>Ended at this length</th><th>Reached this length</th><th>Fair wheel reaches it</th></tr>';for(let n=0;n<=d.longest;n++){const ended=d.runs.filter(r=>r===n).length,reach=all.filter(r=>r>=n).length;t+=`<tr${n===d.L?' class="cur"':''}><td>${n}${n===d.L?' (now)':''}</td><td>${ended}</td><td>${reach} of ${d.total}${pc(reach,d.total)}</td><td>${(Math.pow(36/38,n)*100).toFixed(1)}%</td></tr>`;}$('stktbl').innerHTML=t;}
+function streakText(){const d=dryStats(),pc=(a,b)=>b?` (${Math.round(100*a/b)}%)`:'',done=d.runs.length,avg=done?(d.runs.reduce((s,r)=>s+r,0)/done):null;
+let s=`<tr><td>Finished droughts so far</td><td>${done}</td></tr><tr><td>Current drought, not counted</td><td>${d.L} spin${d.L===1?'':'s'}</td></tr>`;
+if(d.L>0)s+=`<tr><td>Earlier droughts that reached ${d.L} or more, as a share of all ${d.total} droughts (the current one included in the count)</td><td>${d.everReached} of ${d.total}${pc(d.everReached,d.total)}</td></tr><tr><td>Fair wheel: droughts that reach ${d.L} or more</td><td>${(d.theory*100).toFixed(1)}%</td></tr><tr><td>Times a green came on the very next spin after ${d.L} misses</td><td>${d.everReached?d.endedHere+' of '+d.everReached+pc(d.endedHere,d.everReached):'no data yet'}</td></tr>`;
+s+=`<tr><td>Longest drought, current one included</td><td>${d.longest}</td></tr><tr><td>Average length of finished droughts, fair wheel 18.0</td><td>${avg===null?'–':avg.toFixed(1)}</td></tr>`;$('stksum').innerHTML=s;
+let t='<tr><th>Length</th><th>Ended at this length</th><th>Reached this length</th><th>Fair wheel reaches it</th></tr>';for(let n=0;n<=d.longest;n++){const ended=d.runs.filter(r=>r===n).length,reach=d.runs.filter(r=>r>=n).length;t+=`<tr${n===d.L?' class="cur"':''}><td>${n}${n===d.L?' (now)':''}</td><td>${ended}</td><td>${reach} of ${done}${pc(reach,done)}</td><td>${(Math.pow(36/38,n)*100).toFixed(1)}%</td></tr>`;}$('stktbl').innerHTML=t;}
 function openStreaks(){streakText();$('streakpanel').hidden=false;}
 $('streakbtn').addEventListener('click',openStreaks);$('streakclose').addEventListener('click',()=>{$('streakpanel').hidden=true;});$('streakpanel').addEventListener('click',e=>{if(e.target===$('streakpanel'))$('streakpanel').hidden=true;});
 function openFair(){fairText();fairFooter();$('fairpanel').hidden=false;}
