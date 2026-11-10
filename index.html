@@ -46,6 +46,14 @@ button{font:inherit;cursor:pointer}
 .stat .v{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
 #bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#avg{min-width:1.7em}#oddsv{min-width:2.6em}
 @media (max-width:760px){.fw2{display:none}}
+.statbtn{background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
+.statbtn .chev{color:var(--gold);font-size:16px;line-height:1;margin-left:-2px}
+.stk{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin:6px 0 10px;font-size:12px}
+.stk th{text-align:right;font-weight:600;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--line);font-size:11px}
+.stk th:first-child,.stk td:first-child{text-align:left}
+.stk td{text-align:right;padding:3px 0 3px 10px;border-bottom:1px solid var(--line)}
+.stk td:first-child{padding-left:0}
+.stk tr.cur td{color:var(--gold);font-weight:600}
 .odds{flex:1;min-width:0;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .odds b{color:var(--gold);font-weight:600}
 #main{flex:1;min-height:0;display:flex;gap:10px}
@@ -117,8 +125,11 @@ canvas{display:block}
 @keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}24%{transform:translate(-50%,-50%) scale(1)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
 .fair{flex:none;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;border:1px solid rgba(243,193,104,.6);background:transparent;color:var(--gold);font-size:11px;font-weight:600;white-space:nowrap}
 .fair svg{width:12px;height:12px}
-#fairpanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
-#fairpanel[hidden]{display:none}
+#fairpanel,#streakpanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
+#fairpanel[hidden],#streakpanel[hidden]{display:none}
+#streakpanel .fcard table:not(.stk){width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin:4px 0 8px}
+#streakpanel .fcard table:not(.stk) td{padding:3px 0;border-bottom:1px solid var(--line);vertical-align:top}
+#streakpanel .fcard table:not(.stk) td:last-child{text-align:right;white-space:nowrap;padding-left:12px}
 .fcard{background:var(--felt-deep);border:1px solid var(--line);border-radius:14px;max-width:600px;width:100%;max-height:100%;overflow:auto;padding:14px 16px;font-size:12.5px;line-height:1.45}
 .fcard h2{font-family:var(--display);font-weight:500;font-size:20px;margin:0 0 6px}
 .fcard p{margin:0 0 8px;color:var(--muted)}
@@ -149,7 +160,7 @@ canvas{display:block}
     <div class="stat"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
     <div class="stat"><span class="l">No green</span><span class="v" id="streak">0</span></div>
     <div class="stat"><span class="l">Spins/green</span><span class="v" id="avg">–</span><span class="l" id="avgnote">(19 fair)</span></div>
-    <div class="stat"><span class="l" id="oddsl">Dry spells</span><span class="v" id="oddsv">0</span></div>
+    <button class="stat statbtn" id="streakbtn" aria-haspopup="dialog" title="Open the streak page"><span class="l" id="oddsl">Dry spells</span><span class="v" id="oddsv">0</span><span class="chev" aria-hidden="true">›</span></button>
     <button class="fair" id="fairbtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span class="fw">Fair <span class="fw2">wheel</span></span></button>
   </header>
   <div id="main">
@@ -192,6 +203,15 @@ canvas{display:block}
     <div class="frow"><button class="ghost" id="retrybtn" hidden>Retry sync</button><button class="ghost" id="fairclose">Close</button></div>
   </div>
 </div>
+<div id="streakpanel" hidden role="dialog" aria-modal="true" aria-labelledby="streakh" class="panelwrap">
+  <div class="fcard">
+    <h2 id="streakh">Dry spells</h2>
+    <p>A dry spell is a stretch of spins with no 0 or 00, counted from your own history. The current spell counts as one of them.</p>
+    <table id="stksum"></table>
+    <table class="stk" id="stktbl"></table>
+    <div class="frow"><button class="ghost" id="streakclose">Close</button></div>
+  </div>
+</div>
 <div id="fx" aria-hidden="true"><canvas id="fxc"></canvas><div id="fxr"></div><div id="fxs"></div><div id="fxl"></div></div>
 <div id="install" hidden><span>To install: open this page in <b>Safari</b>, tap <b>Share</b>, then <b>Add to Home Screen</b>.</span><button id="hintclose" aria-label="Dismiss">×</button></div>
 <script>
@@ -208,7 +228,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='28';
+const VERSION='29';
 const DEN=[1,5,10,25,50,100];
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
@@ -380,10 +400,17 @@ function fairText(){const N=state.hist.length,cnt=k=>state.hits[k]||0,g=cnt('0')
 const e1=N/38;let chi=0;['0','00',...Array.from({length:36},(_,i)=>String(i+1))].forEach(k=>{const o=cnt(k);if(e1>0)chi+=(o-e1)*(o-e1)/e1;});const p=N?gammq(18.5,chi/2):1;
 $('fairhow').textContent=secureRNG?'Each spin asks your phone for a cryptographically secure random number (crypto.getRandomValues, the same generator used for encryption keys), throws out the rare values that would favor any pocket, and takes the remainder mod 38. Every pocket is exactly 1 in 38. The number is drawn before your bets are looked at, and nothing in the game reads your bets, your balance or past spins when choosing it.':'Secure random is not available in this browser, so spins fall back to Math.random. Every pocket is still 1 in 38, but the generator is not cryptographic.';
 const f1=x=>x.toFixed(1);
-$('fairtbl').innerHTML=`<tr><td>Spins on this wheel</td><td>${N.toLocaleString()}</td></tr><tr><td>Greens (0 and 00), expected ${f1(N*2/38)}</td><td>${g}</td></tr><tr><td>Average spins per green, fair wheel 19.0</td><td>${gs.avg===null?'–':f1(gs.avg)}</td></tr><tr><td>Longest run without a green</td><td>${gs.longest}</td></tr>${(()=>{const d=dryStats();const pc=(a,b)=>b?` (${Math.round(100*a/b)}%)`:'';let r=`<tr><td>Dry spells so far (stretches with no green), counting the current one</td><td>${d.total}</td></tr>`;if(d.L>0){r+=`<tr><td>Dry spells that reached ${d.L} or more, like the current one</td><td>${d.reached} of ${d.total}${pc(d.reached,d.total)}</td></tr><tr><td>Fair wheel: dry spells that reach ${d.L} or more</td><td>${(d.theory*100).toFixed(1)}%</td></tr><tr><td>Times a green came on the very next spin after ${d.L} misses</td><td>${d.everReached?d.endedHere+' of '+d.everReached+pc(d.endedHere,d.everReached):'no data yet'}</td></tr>`;}return r;})()}<tr><td>Reds, expected ${f1(N*18/38)}</td><td>${r}</td></tr><tr><td>Blacks, expected ${f1(N*18/38)}</td><td>${bk}</td></tr><tr><td>Spread across all 38 pockets (chi-square, 37 df)</td><td>${N?f1(chi):'–'}</td></tr><tr><td>How often a fair wheel is at least this lumpy</td><td>${N?(p*100).toFixed(1)+'%':'–'}</td></tr>`;
+$('fairtbl').innerHTML=`<tr><td>Spins on this wheel</td><td>${N.toLocaleString()}</td></tr><tr><td>Greens (0 and 00), expected ${f1(N*2/38)}</td><td>${g}</td></tr><tr><td>Average spins per green, fair wheel 19.0</td><td>${gs.avg===null?'–':f1(gs.avg)}</td></tr><tr><td>Longest run without a green</td><td>${gs.longest}</td></tr><tr><td>Reds, expected ${f1(N*18/38)}</td><td>${r}</td></tr><tr><td>Blacks, expected ${f1(N*18/38)}</td><td>${bk}</td></tr><tr><td>Spread across all 38 pockets (chi-square, 37 df)</td><td>${N?f1(chi):'–'}</td></tr><tr><td>How often a fair wheel is at least this lumpy</td><td>${N?(p*100).toFixed(1)+'%':'–'}</td></tr>`;
 const v=$('fairverdict');if(N<100){v.textContent='Too few spins to judge the spread yet. About 100 spins gives a rough read, 200 or more a solid one.';v.className='verdict warn';}else if(p>=.05){v.textContent='Within the normal range for a fair wheel.';v.className='verdict';}else if(p>=.01){v.textContent='A little lumpy, but a fair wheel does this about 1 time in 20.';v.className='verdict warn';}else{v.textContent='Unusually lumpy for a fair wheel, about 1 time in 100 or rarer. Keep spinning; if it stays here, something is off.';v.className='verdict bad';}
 const ld=state.lastDraw;$('fairlast').innerHTML=ld&&ld.raw!==null&&ld.raw!==undefined?`Last draw: <span class="mono">${ld.raw.toLocaleString()}</span> mod 38 = <span class="mono">${ld.idx}</span>, so ${ld.idx===0?'the 0 pocket itself':'pocket '+ld.idx+' counting clockwise from 0'}: <span class="mono">${ld.n}</span>.`:'';}
 function fairFooter(){$('fairver').textContent=syncText();$('retrybtn').hidden=!HAS_RUNTIME||cloudStatus==='on'||cloudStatus==='connecting'||cloudStatus==='write failed';}
+function streakText(){const d=dryStats(),pc=(a,b)=>b?` (${Math.round(100*a/b)}%)`:'',all=d.runs.concat([d.L]),avg=d.runs.length?(d.runs.reduce((s,r)=>s+r,0)/d.runs.length):null;
+let s=`<tr><td>Dry spells so far, counting the current one</td><td>${d.total}</td></tr><tr><td>Current dry spell</td><td>${d.L} spin${d.L===1?'':'s'}</td></tr>`;
+if(d.L>0)s+=`<tr><td>Dry spells that reached ${d.L} or more, like this one</td><td>${d.reached} of ${d.total}${pc(d.reached,d.total)}</td></tr><tr><td>Fair wheel: dry spells that reach ${d.L} or more</td><td>${(d.theory*100).toFixed(1)}%</td></tr><tr><td>Times a green came on the very next spin after ${d.L} misses</td><td>${d.everReached?d.endedHere+' of '+d.everReached+pc(d.endedHere,d.everReached):'no data yet'}</td></tr>`;
+s+=`<tr><td>Longest dry spell</td><td>${d.longest}</td></tr><tr><td>Average length of finished dry spells, fair wheel 18.0</td><td>${avg===null?'–':avg.toFixed(1)}</td></tr>`;$('stksum').innerHTML=s;
+let t='<tr><th>Length</th><th>Ended at this length</th><th>Reached this length</th><th>Fair wheel reaches it</th></tr>';for(let n=0;n<=d.longest;n++){const ended=d.runs.filter(r=>r===n).length,reach=all.filter(r=>r>=n).length;t+=`<tr${n===d.L?' class="cur"':''}><td>${n}${n===d.L?' (now)':''}</td><td>${ended}</td><td>${reach} of ${d.total}${pc(reach,d.total)}</td><td>${(Math.pow(36/38,n)*100).toFixed(1)}%</td></tr>`;}$('stktbl').innerHTML=t;}
+function openStreaks(){streakText();$('streakpanel').hidden=false;}
+$('streakbtn').addEventListener('click',openStreaks);$('streakclose').addEventListener('click',()=>{$('streakpanel').hidden=true;});$('streakpanel').addEventListener('click',e=>{if(e.target===$('streakpanel'))$('streakpanel').hidden=true;});
 function openFair(){fairText();fairFooter();$('fairpanel').hidden=false;}
 $('fairbtn').addEventListener('click',openFair);
 $('retrybtn').addEventListener('click',()=>{connectCloud().then(fairFooter);fairFooter();setTimeout(fairFooter,1500);setTimeout(fairFooter,4000);});
