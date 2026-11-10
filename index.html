@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dave's Roulette</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Roulette">
+<meta name="theme-color" content="#14301a">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: one landscape screen. Top stats bar; left column wheel, result, history; right column board, chip rack with actions, saved bets with Spin */
+  --felt:#1b3d22;
+  --felt-deep:#14301a;
+  --line:rgba(241,239,232,.18);
+  --cream:#f1efe8;
+  --muted:#b9b6aa;
+  --gold:#f3c168;
+  --red:#a8302c;
+  --black:#262624;
+  --green:#3a7a24;
+  --rim:#4a1b0c;
+  --win:#8ed67e;
+  --lose:#f3948e;
+  --display:'Oswald','Arial Narrow',Impact,sans-serif;
+  --body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--felt);color:var(--cream);font-family:var(--body);-webkit-text-size-adjust:100%}
+body{overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#app{height:100%;display:flex;flex-direction:column;gap:8px;padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
+#top{display:flex;flex-wrap:nowrap;align-items:baseline;gap:12px;flex:none;padding:0 4px 6px;border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}
+.stat{display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex:none}
+.stat .l{font-size:clamp(9.5px,1.35vw,11px);color:var(--muted)}
+.stat .v{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
+#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#avg{min-width:1.7em}#oddsv{min-width:2.2em}
+@media (max-width:760px){.fw2{display:none}}
+.odds{flex:1;min-width:0;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.odds b{color:var(--gold);font-weight:600}
+#main{flex:1;min-height:0;display:flex;gap:10px}
+#left{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:0;overflow:hidden}
+#left>*{flex:none}
+canvas{display:block}
+.resrow{width:100%;display:flex;align-items:center;gap:8px;min-height:30px}
+#res{display:flex;align-items:center;gap:8px;min-height:30px}
+#fsbtn{margin-left:auto;flex:none;width:32px;height:30px;border-radius:8px;border:1px solid rgba(241,239,232,.45);background:transparent;color:var(--cream);display:inline-flex;align-items:center;justify-content:center;padding:0}
+#fsbtn svg{width:16px;height:16px}
+#fsbtn[hidden]{display:none}
+.big{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 9px;border-radius:15px;color:#fff;font-family:var(--display);font-size:17px;font-weight:500;border:2px solid var(--cream)}
+.sub{font-size:12px;color:var(--muted)}
+#msg{font-size:11.5px;height:30px;text-align:center;color:var(--muted);line-height:1.3;width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#msg.good{color:var(--win)}
+#msg.bad{color:var(--lose)}
+.histlbl{font-size:10.5px;color:var(--muted);text-align:center;white-space:nowrap}
+.hist{display:flex;gap:3px;flex-wrap:nowrap;justify-content:flex-start;height:20px;overflow:hidden;width:100%}
+.pill{min-width:20px;height:20px;padding:0 4px;border-radius:10px;color:#fff;font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.small{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap;margin:0 0 10px}
+.ghost{background:transparent;color:var(--cream);border:1px solid rgba(241,239,232,.45);border-radius:7px;padding:5px 8px;font-size:11px;white-space:nowrap}
+.ghost:disabled,.mini:disabled,.slot:disabled,.acts button:disabled,#spin:disabled{opacity:.4}
+#right{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
+#boardwrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#grid{position:relative;flex:none;font-size:17px}
+.cell{position:absolute;border:1px solid var(--cream);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--display);font-weight:500;font-size:1em;user-select:none;-webkit-user-select:none;cursor:pointer}
+.cell.win{outline:3px solid var(--gold);outline-offset:-3px}
+.hit{position:absolute;top:1px;right:3px;font-family:var(--body);font-size:10px;font-weight:400;color:var(--gold);line-height:1}
+.ob{position:absolute;border:1px solid var(--cream);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--display);font-size:.78em;font-weight:500;background:var(--green);user-select:none;-webkit-user-select:none;cursor:pointer;white-space:nowrap;overflow:hidden}
+.chip{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:2px dashed rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;z-index:3;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.rowA,.rowB{display:flex;align-items:center;gap:8px;flex:none}
+.rack{display:flex;gap:6px;align-items:center}
+.cs{width:34px;height:34px;border-radius:50%;padding:0;border:2px dashed rgba(255,255,255,.85);color:#fff;font-size:11.5px;font-weight:600;box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.cs.sel{outline:3px solid var(--gold);outline-offset:2px}
+.acts{display:flex;gap:6px;margin-left:auto}
+.acts button{height:36px;min-width:56px;padding:0 10px;border-radius:9px;border:1px solid rgba(241,239,232,.45);background:transparent;color:var(--cream);font-size:12.5px;font-weight:600;white-space:nowrap}
+.savedctl{display:flex;flex-direction:column;gap:4px;flex:none}
+.mini{background:transparent;color:var(--cream);border:1px solid rgba(241,239,232,.45);border-radius:6px;padding:0 7px;height:18px;font-size:10.5px;line-height:1;white-space:nowrap}
+.mini.on{background:var(--gold);color:var(--felt-deep);border-color:var(--gold)}
+.slots{display:flex;gap:6px;flex:1;min-width:0}
+.slot{flex:1;min-width:0;height:40px;border-radius:8px;border:1px dashed rgba(241,239,232,.45);background:transparent;color:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0 3px}
+.slot.filled{border-style:solid;background:rgba(241,239,232,.08)}
+.slot.arm{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.slot .sn{font-family:var(--display);font-size:14px;line-height:1}
+.slot .sd{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.1}
+.slot.filled .sd{color:var(--cream)}
+.slot.hot.filled{border-color:#f0997b;background:rgba(240,153,123,.14)}
+.slot.cold.filled{border-color:#85b7eb;background:rgba(133,183,235,.14)}
+.slot.hot.filled .sn{color:#f5c4b3}
+.slot.cold.filled .sn{color:#b5d4f4}
+#spin{height:40px;min-width:116px;padding:0 18px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#fff;font-family:var(--display);font-size:19px;letter-spacing:.05em;flex:none}
+.dolly{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fffdf5,#d9d3be 58%,#a9a288);border:2px solid #6b6248;box-shadow:0 3px 6px rgba(0,0,0,.55),inset 0 0 0 3px rgba(255,255,255,.55);z-index:4;pointer-events:none;animation:drop .38s cubic-bezier(.2,.9,.3,1.2) both}
+.dolly::after{content:"";position:absolute;inset:6px;border-radius:50%;border:1.5px solid rgba(107,98,72,.65)}
+@keyframes drop{from{transform:translateY(-18px) scale(1.6);opacity:0}to{transform:none;opacity:1}}
+.dolly.lift{animation:lift .35s ease-in forwards}
+@keyframes lift{from{transform:none;opacity:1}to{transform:translateY(-16px) scale(1.3);opacity:0}}
+#fx{position:fixed;inset:0;z-index:20;pointer-events:none;overflow:hidden}
+#fxc{position:absolute;inset:0;display:block}
+#fxr{position:absolute;inset:0;background:rgba(150,20,20,.5);opacity:0}
+#fxr.on{animation:redflash .8s ease-out forwards}
+@keyframes redflash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.skull{position:absolute;bottom:-100px;opacity:0;animation:rise 2.6s ease-out forwards;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.skull svg{width:100%;height:100%;display:block}
+@keyframes rise{0%{transform:translateY(0) rotate(0deg);opacity:0}12%{opacity:1}80%{opacity:.9}100%{transform:translateY(calc(-100vh - 140px)) rotate(var(--rot));opacity:0}}
+#fxl{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-family:var(--display);font-size:54px;font-weight:600;letter-spacing:.04em;opacity:0;white-space:nowrap;text-shadow:0 2px 14px rgba(0,0,0,.65);color:var(--cream)}
+#fxl.good{color:var(--gold)}
+#fxl.bad{color:var(--lose)}
+#fxl.pop{animation:pop 2.4s ease-out forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}24%{transform:translate(-50%,-50%) scale(1)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+.fair{flex:none;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;border:1px solid rgba(243,193,104,.6);background:transparent;color:var(--gold);font-size:11px;font-weight:600;white-space:nowrap}
+.fair svg{width:12px;height:12px}
+#fairpanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
+#fairpanel[hidden]{display:none}
+.fcard{background:var(--felt-deep);border:1px solid var(--line);border-radius:14px;max-width:600px;width:100%;max-height:100%;overflow:auto;padding:14px 16px;font-size:12.5px;line-height:1.45}
+.fcard h2{font-family:var(--display);font-weight:500;font-size:20px;margin:0 0 6px}
+.fcard p{margin:0 0 8px;color:var(--muted)}
+.fcard table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin:4px 0 8px}
+.fcard td{padding:3px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.fcard td:last-child{text-align:right;white-space:nowrap;padding-left:12px}
+.verdict{font-weight:600;color:var(--win)}
+.verdict.warn{color:var(--gold)}
+.verdict.bad{color:var(--lose)}
+.fcard .mono{font-variant-numeric:tabular-nums;color:var(--cream)}
+.frow{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+#rotate{position:fixed;inset:0;z-index:30;background:var(--felt);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;color:var(--cream)}
+#rotate[hidden]{display:none}
+#rotate h1{font-family:var(--display);font-weight:500;font-size:26px;margin:0}
+#rotate p{margin:0;color:var(--muted);font-size:14px;max-width:30ch;line-height:1.4}
+#rotate svg{color:var(--gold)}
+#install{position:fixed;left:50%;transform:translateX(-50%);top:calc(46px + env(safe-area-inset-top));z-index:25;max-width:min(92vw,460px);background:var(--cream);color:var(--felt-deep);border-radius:12px;padding:8px 10px 8px 12px;font-size:12.5px;line-height:1.35;display:flex;gap:10px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#install[hidden]{display:none}
+#install b{font-weight:600}
+#install button{margin-left:auto;flex:none;background:transparent;border:none;font-size:20px;line-height:1;color:var(--felt-deep);padding:2px 6px}
+@media (prefers-reduced-motion:reduce){.dolly{animation:none}#fxl.pop{animation-duration:1.4s}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="stat"><span class="l">Balance</span><span class="v" id="bal">1,000</span></div>
+    <div class="stat"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
+    <div class="stat"><span class="l">No green</span><span class="v" id="streak">0</span></div>
+    <div class="stat"><span class="l">Spins/green</span><span class="v" id="avg">–</span><span class="l" id="avgnote">(19 fair)</span></div>
+    <div class="stat"><span class="l" id="oddsl">0/00 next spin</span><span class="v" id="oddsv">5.3%</span></div>
+    <button class="fair" id="fairbtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span class="fw">Fair <span class="fw2">wheel</span></span></button>
+  </header>
+  <div id="main">
+    <aside id="left" aria-label="Wheel and results">
+      <canvas id="wheel" aria-label="Roulette wheel"></canvas>
+      <div class="resrow"><div id="res" aria-live="polite"></div><button id="fsbtn" aria-label="Full screen" title="Full screen"></button></div>
+      <div id="msg">Pick a chip, tap the board to bet, then spin.</div>
+      <div class="histlbl">Last spins · <span id="spins">0</span> total</div>
+      <div class="hist" id="hist"></div>
+    </aside>
+    <section id="right" aria-label="Betting board and controls">
+      <div id="boardwrap"><div id="grid"></div></div>
+      <div class="rowA">
+        <div class="rack" id="chips" aria-label="Chip rack"></div>
+        <div class="acts"><button id="undo">Undo</button><button id="clear">Clear</button><button id="rep">Repeat</button><button id="dbl">2x</button></div>
+      </div>
+      <div class="rowB">
+        <div class="savedctl"><button class="mini" id="savebtn">Save table</button><button class="mini" id="delbtn">Delete</button></div>
+        <div class="slots" id="slots" aria-label="Saved bets"></div>
+        <button id="spin">Spin</button>
+      </div>
+    </section>
+  </div>
+</div>
+<div id="rotate" hidden>
+  <svg viewBox="0 0 64 64" width="72" height="72" aria-hidden="true"><rect x="23" y="6" width="18" height="34" rx="3.5" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="35" r="1.6" fill="currentColor"/><path d="M12 48a20 11 0 0 0 40 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M52 48l-5-6M52 48l6-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <h1>Turn your phone sideways</h1>
+  <p>This table is laid out wide so the whole game fits on one screen.</p>
+</div>
+<div id="fairpanel" hidden role="dialog" aria-modal="true" aria-labelledby="fairh">
+  <div class="fcard">
+    <h2 id="fairh">Is this wheel fair?</h2>
+    <p id="fairhow"></p>
+    <table id="fairtbl"></table>
+    <p id="fairverdict" class="verdict"></p>
+    <p id="fairlast"></p>
+    <div class="small"><button class="ghost" id="reload">Reload 1,000 chips</button><button class="ghost" id="reset">Reset game</button><button class="ghost" id="backupbtn">Back up game</button><button class="ghost" id="importbtn">Restore a backup</button></div>
+    <div id="backupbox" hidden><p id="backupnote"></p><textarea id="backuptxt" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" style="width:100%;box-sizing:border-box;font-family:var(--body);font-size:11px;background:rgba(241,239,232,.08);color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:6px"></textarea><div class="frow" style="justify-content:flex-start;margin:6px 0 10px"><button class="ghost" id="copybtn" hidden>Copy</button><button class="ghost" id="applybtn" hidden>Restore from this text</button><button class="ghost" id="backupclose">Done</button></div></div>
+    <p id="fairver" style="font-size:11px"></p>
+    <div class="frow"><button class="ghost" id="retrybtn" hidden>Retry sync</button><button class="ghost" id="fairclose">Close</button></div>
+  </div>
+</div>
+<div id="fx" aria-hidden="true"><canvas id="fxc"></canvas><div id="fxr"></div><div id="fxs"></div><div id="fxl"></div></div>
+<div id="install" hidden><span>To install: open this page in <b>Safari</b>, tap <b>Share</b>, then <b>Add to Home Screen</b>.</span><button id="hintclose" aria-label="Dismiss">×</button></div>
+<script>
+const KEY='daves-roulette-v1';
+const reds=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+const WHEEL=[0,28,9,26,30,11,7,20,32,17,5,22,34,15,3,24,36,13,1,'00',27,10,25,29,12,8,19,31,18,6,21,33,16,4,23,35,14,2];
+const isG=n=>n===0||n==='00';
+const colorOf=n=>isG(n)?'#3a7a24':reds.includes(n)?'#a8302c':'#262624';
+const nameOf=n=>isG(n)?'green':reds.includes(n)?'red':'black';
+const chipColor=a=>a<5?'#c9c6ba':a<10?'#a1431f':a<25?'#1f63a8':a<50?'#a8302c':a<100?'#117a5c':a<500?'#262624':'#5a4fb8';
+const fmt=a=>a>=1000?(a/1000).toFixed(a%1000?1:0)+'k':String(a);
+const $=id=>document.getElementById(id);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const dpr=window.devicePixelRatio||1;
+let CW=40,CH=44,OH=26;
+const EMPTY6=()=>[null,null,null,null,null,null];
+const VERSION='24';
+const DEN=[1,5,10,25,50,100];
+const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt'];
+function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
+function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:1000,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=1000;if(!DEN.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;return out;}
+function contentSig(s){const n=normState(s);return JSON.stringify({b:n.balance,h:n.hist,k:n.hits,l:n.lastBets,c:n.chip,s:n.saved,g:n.gen,t:n.table,q:n.stack,r:!!n.restored});}
+let state=normState({});
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s.balance==='number'&&Array.isArray(s.hist))state=normState(s);}catch(e){}
+let bets=new Map(),stack=[],spinning=false,wAng=0,bAng=-Math.PI/2,bR=80,R=80;
+hydrateTable();
+let lastSig='';
+function save(){state.table=[...bets.values()].map(b=>({key:b.key,nums:b.nums,pay:b.pay,amount:b.amount}));state.stack=stack.slice();const sig=contentSig(state);if(sig===lastSig)return;lastSig=sig;state.rev=(state.rev||0)+1;state.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}cloudSchedule();}
+function payload(){const p=JSON.parse(JSON.stringify(normState(state)));const m={};p.saved.forEach((s,i)=>{if(s)m['s'+i]=s;});p.saved=m;return p;}
+function hydrateTable(){bets=new Map();(Array.isArray(state.table)?state.table:[]).forEach(b=>{if(b&&b.key&&Array.isArray(b.nums)&&typeof b.amount==='number'&&b.amount>0)bets.set(b.key,{key:b.key,nums:b.nums,pay:b.pay,amount:b.amount});});stack=(Array.isArray(state.stack)?state.stack:[]).filter(p=>p&&bets.has(p.key)&&typeof p.amount==='number');}
+let cloudDoc=null,cloudTimer=null,cloudBusy=false,cloudDirty=false,cloudHold=0,cloudStatus='starting',cloudSavedAt=0,cloudErr='';
+const errText=e=>{try{return (e&&(e.message||e.code||String(e)))||'unknown error';}catch(x){return 'unknown error';}};
+function cloudSchedule(){if(!cloudDoc)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(cloudPush,800);}
+async function cloudPush(){if(!cloudDoc||Date.now()<cloudHold)return;if(cloudBusy){cloudDirty=true;return;}cloudBusy=true;cloudDirty=false;try{await cloudDoc.set(payload());cloudSavedAt=Date.now();cloudErr='';cloudStatus='on';}catch(e){cloudHold=Date.now()+10000;cloudErr=errText(e);cloudStatus='write failed';}cloudBusy=false;if(cloudDirty)cloudSchedule();}
+function progress(s){return{gen:(s&&+s.gen)||0,spins:(s&&Array.isArray(s.hist))?s.hist.length:0,rev:(s&&+s.rev)||0,t:(s&&+s.updatedAt)||0};}
+function better(a,b){const A=progress(a),B=progress(b);if(A.gen!==B.gen)return A.gen>B.gen;if(A.spins!==B.spins)return A.spins>B.spins;if(A.rev!==B.rev)return A.rev>B.rev;return A.t>B.t;}
+function adopt(remote){if(spinning)return;const n=normState(remote);if(contentSig(n)===contentSig(state))return;state=n;hydrateTable();lastSig=contentSig(state);try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}selChip();render();}
+const HAS_RUNTIME=!!(window.claude&&typeof claude.use==='function');
+let cloudConnecting=false,cloudWatching=false;
+async function connectCloud(){if(cloudConnecting||cloudDoc)return;cloudConnecting=true;try{
+if(!window.claude||typeof claude.use!=='function'){cloudStatus='off: this page was opened without the Claude runtime (open it from claude.ai)';return;}
+cloudStatus='connecting';const db=await claude.use('db');if(!db){cloudStatus='off: signed out of Claude in this browser, or storage not allowed';return;}
+const user=await claude.use('user');if(!user||typeof user.id!=='function'){cloudStatus='off: could not read who is signed in';return;}
+const id=await user.id();if(!id){cloudStatus='off: no signed-in user';return;}
+const doc=db.collection('data/users/'+String(id)).doc('game');
+const unpack=s=>{let r=s&&typeof s.data==='function'?s.data():(s&&s.data&&typeof s.data==='object'&&!Array.isArray(s.data)?s.data:s);if(r&&r.exists===false)r=null;return r&&typeof r.balance==='number'?r:null;};
+let remote;try{remote=unpack(await doc.get());}catch(e){cloudErr=errText(e);cloudStatus='off: read refused ('+cloudErr+')';return;}
+cloudDoc=doc;cloudStatus='on';
+if(remote&&contentSig(remote)!==contentSig(state)&&better(remote,state))adopt(remote);else cloudPush();
+if(!cloudWatching&&typeof doc.onSnapshot==='function'){try{doc.onSnapshot(s=>{const r=unpack(s);if(r&&contentSig(r)!==contentSig(state)&&better(r,state))adopt(r);});cloudWatching=true;}catch(e){}}
+}catch(e){cloudErr=errText(e);cloudStatus='off: '+cloudErr;}finally{cloudConnecting=false;}}
+connectCloud();
+function localOK(){try{const k=KEY+'-probe';localStorage.setItem(k,'1');const ok=localStorage.getItem(k)==='1';localStorage.removeItem(k);return ok;}catch(e){return false;}}
+function syncText(){let t='Build '+VERSION+' · ';if(!HAS_RUNTIME)t+='saved on this phone';else if(cloudStatus==='on')t+='account sync on'+(cloudSavedAt?', saved '+new Date(cloudSavedAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'');else if(cloudStatus==='write failed')t+='account sync on, last save failed ('+cloudErr+')';else if(cloudStatus==='connecting'||cloudStatus==='starting')t+='account sync connecting';else t+='account sync '+cloudStatus;t+=' · phone storage '+(localOK()?'ok':'blocked');if(lastErr)t+=' · last error: '+lastErr;return t;}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){clearTimeout(cloudTimer);cloudPush();}});
+window.addEventListener('pagehide',()=>{clearTimeout(cloudTimer);cloudPush();});
+const grid=$('grid'),cells={},outEl={};
+const colOf=n=>Math.ceil(n/3)-1,rowOf=n=>2-(n-1)%3;
+function mk(n){const d=document.createElement('div');d.className='cell';d.innerHTML=`<span>${n}</span><span class="hit"></span>`;d.style.background=colorOf(n);grid.appendChild(d);cells[n]=d;}
+mk(0);mk('00');for(let n=1;n<=36;n++)mk(n);
+function ob(label,key,nums,pay,bg){const d=document.createElement('div');d.className='ob';if(bg)d.style.background=bg;d.textContent=label;d.addEventListener('click',()=>place({key,nums,pay}));grid.appendChild(d);outEl[key]=d;}
+const all=Array.from({length:36},(_,i)=>i+1);
+[0,1,2].forEach(c=>ob('2 to 1','col'+c,all.filter(n=>(n-1)%3===c),2));
+[1,2,3].forEach(d=>ob(['1st 12','2nd 12','3rd 12'][d-1],'doz'+d,all.filter(n=>Math.ceil(n/12)===d),2));
+ob('1 to 18','low',all.filter(n=>n<=18),1);ob('Even','even',all.filter(n=>n%2===0),1);ob('Red','red',all.filter(n=>reds.includes(n)),1,'#a8302c');ob('Black','black',all.filter(n=>!reds.includes(n)),1,'#262624');ob('Odd','odd',all.filter(n=>n%2===1),1);ob('19 to 36','high',all.filter(n=>n>18),1);
+function cellBox(n){if(n===0)return[0,1.5*CH,CW,1.5*CH];if(n==='00')return[0,0,CW,1.5*CH];return[CW*(1+colOf(n)),CH*rowOf(n),CW,CH];}
+function posFor(key){let m;
+if(key==='s0')return[.5*CW,2.25*CH];if(key==='s00')return[.5*CW,.75*CH];if(key==='sp0-00')return[.5*CW,1.5*CH];if(key==='basket')return[CW,3*CH];
+if((m=/^s(\d+)$/.exec(key))){const n=+m[1];return[CW*(1.5+colOf(n)),CH*(rowOf(n)+.5)];}
+if((m=/^sp(00|0)-(\d)$/.exec(key))){const z=m[1],b=+m[2];return[CW,CH*(z==='00'?(b===3?.5:1.25):(b===2?1.75:2.5))];}
+if((m=/^sp(\d+)-(\d+)$/.exec(key))){const a=+m[1],b=+m[2];if(b===a+1)return[CW*(1.5+colOf(a)),CH*rowOf(a)];return[CW*(2+colOf(a)),CH*(rowOf(a)+.5)];}
+if((m=/^c(\d+)$/.exec(key))){const a=+m[1];return[CW*(2+colOf(a)),CH*rowOf(a)];}
+if((m=/^st(\d+)$/.exec(key))){const a=+m[1];return[CW*(1.5+colOf(a)),3*CH];}
+if((m=/^six(\d+)$/.exec(key))){const a=+m[1];return[CW*(2+colOf(a)),3*CH];}
+return null;}
+const cv=$('wheel'),ctx=cv.getContext('2d'),A=2*Math.PI/38;
+function layout(){const vw=innerWidth,vh=innerHeight;$('rotate').hidden=!(vw<560&&vh>vw);
+const main=$('main'),left=$('left'),bw=$('boardwrap');const mw=main.clientWidth,mh=main.clientHeight;
+const leftW=Math.round(Math.min(215,Math.max(150,mw*.26)));left.style.width=leftW+'px';
+const rw=mw-leftW-10;CW=Math.max(24,Math.floor(rw/14));OH=CW<34?22:26;
+const bh=bw.clientHeight;CH=Math.max(24,Math.min(48,Math.floor((bh-2*OH-4)/3)));
+grid.style.width=14*CW+'px';grid.style.height=(3*CH+2*OH)+'px';
+const pos=(d,x,y,w,h)=>{d.style.left=x+'px';d.style.top=y+'px';d.style.width=w+'px';d.style.height=h+'px';};
+for(const k in cells){const n=k==='00'?'00':+k;const b=cellBox(n);pos(cells[k],b[0],b[1],b[2],b[3]);}
+[0,1,2].forEach(c=>pos(outEl['col'+c],13*CW,CH*(2-c),CW,CH));
+[1,2,3].forEach(d=>pos(outEl['doz'+d],CW*(1+4*(d-1)),3*CH,4*CW,OH));
+['low','even','red','black','odd','high'].forEach((k,i)=>pos(outEl[k],CW*(1+2*i),3*CH+OH,2*CW,OH));
+grid.style.fontSize=CW<32?'14px':'17px';
+const ws=Math.max(110,Math.min(leftW-4,mh-112));cv.style.width=ws+'px';cv.style.height=ws+'px';cv.width=Math.round(ws*dpr);cv.height=Math.round(ws*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);R=ws/2;if(!spinning)bR=R-38*(R/115);
+draw();render();}
+function spot(x,y){const Hn=3*CH;if(x<0||x>13*CW||y<0||y>Hn)return null;
+if(x<CW){if(Math.abs(y-1.5*CH)<10)return{key:'sp0-00',nums:[0,'00'],pay:17};return y<1.5*CH?{key:'s00',nums:['00'],pay:35}:{key:'s0',nums:[0],pay:35};}
+const X=x-CW,c=Math.min(11,Math.floor(X/CW)),r=Math.min(2,Math.floor(y/CH));
+const vx=Math.round(X/CW),dx=Math.abs(X-vx*CW),hy=Math.round(y/CH),dy=Math.abs(y-hy*CH);
+let nearV=dx<Math.min(12,CW*.3),nearH=dy<Math.min(10,CH*.25);if(vx===12)nearV=false;if(hy===0)nearH=false;
+if(vx===0&&nearV){if(nearH&&hy===3)return{key:'basket',nums:[0,'00',1,2,3],pay:6};if(r===0)return{key:'sp00-3',nums:['00',3],pay:17};if(r===2)return{key:'sp0-1',nums:[0,1],pay:17};return y<1.5*CH?{key:'sp00-2',nums:['00',2],pay:17}:{key:'sp0-2',nums:[0,2],pay:17};}
+if(nearH&&hy===3){if(nearV&&vx>=1&&vx<=11){const a=3*(vx-1)+1;return{key:'six'+a,nums:[a,a+1,a+2,a+3,a+4,a+5],pay:5};}const a=3*c+1;return{key:'st'+a,nums:[a,a+1,a+2],pay:11};}
+if(nearV&&nearH&&vx>=1&&vx<=11&&hy>=1&&hy<=2){const a=3*(vx-1)+(3-hy);return{key:'c'+a,nums:[a,a+1,a+3,a+4],pay:8};}
+if(nearV&&vx>=1&&vx<=11){const a=3*(vx-1)+(3-r);return{key:'sp'+a+'-'+(a+3),nums:[a,a+3],pay:17};}
+if(nearH&&hy>=1&&hy<=2){const a=3*c+(3-hy);return{key:'sp'+a+'-'+(a+1),nums:[a,a+1],pay:17};}
+const n=3*c+(3-r);return{key:'s'+n,nums:[n],pay:35};}
+grid.addEventListener('click',e=>{if(e.target.closest('.ob'))return;const rc=grid.getBoundingClientRect();const s=spot(e.clientX-rc.left,e.clientY-rc.top);if(s)place(s);});
+function msg(t,kind){const m=$('msg');m.textContent=t;m.className=kind||'';}
+function place(s){if(spinning||!s||!Array.isArray(s.nums)||typeof s.pay!=='number')return;const chip=state.chip;if(chip>state.balance){msg('Not enough chips. Reload below if you need more.','bad');return;}state.balance-=chip;const b=bets.get(s.key)||{key:s.key,nums:s.nums,pay:s.pay,amount:0};b.amount+=chip;bets.set(s.key,b);stack.push({key:s.key,amount:chip});render();}
+function render(){document.querySelectorAll('.chip').forEach(e=>e.remove());let tot=0;
+bets.forEach(b=>{tot+=b.amount;const d=document.createElement('div');d.className='chip';d.textContent=fmt(b.amount);d.style.background=chipColor(b.amount);d.style.color=b.amount<5?'#262624':'#fff';
+if(outEl[b.key]){d.style.left='50%';d.style.top='50%';outEl[b.key].appendChild(d);}else{const p=posFor(b.key);if(!p)return;d.style.left=p[0]+'px';d.style.top=p[1]+'px';grid.appendChild(d);}});
+$('bal').textContent=state.balance.toLocaleString();$('bet').textContent=tot.toLocaleString();
+let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;}$('streak').textContent=s;$('spins').textContent=state.hist.length.toLocaleString();
+const gs=greenStats();$('avg').textContent=gs.avg===null?'–':gs.avg.toFixed(1);$('avgnote').textContent=gs.avg===null?(state.hist.length?`(none in ${state.hist.length})`:'(19 fair)'):'(19 fair)';
+const pG=(1-Math.pow(36/38,s))*100,pTxt=pG>=99.95?'99.9%+':pG.toFixed(1)+'%';
+$('oddsl').textContent=s===0?'0/00 next spin':`0/00 in ${s}`;$('oddsv').textContent=s===0?'5.3%':pTxt;
+$('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
+for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
+['undo','clear','dbl','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
+renderSlots();positionDolly();save();}
+let dollyN=null,dollyT=null,dollyT2=null;
+function clearDolly(){clearTimeout(dollyT);clearTimeout(dollyT2);dollyT=dollyT2=null;dollyN=null;const old=grid.querySelector('.dolly');if(old)old.remove();Object.values(cells).forEach(c=>c.classList.remove('win'));}
+function positionDolly(){const d=grid.querySelector('.dolly');if(!d||dollyN===null)return;const b=cellBox(dollyN);d.style.left=(b[0]+b[2]/2)+'px';d.style.top=(b[1]+b[3]/2)+'px';}
+function showDolly(n){clearDolly();dollyN=n;cells[String(n)].classList.add('win');const d=document.createElement('div');d.className='dolly';grid.appendChild(d);positionDolly();
+dollyT=setTimeout(()=>{d.classList.add('lift');dollyT2=setTimeout(()=>{if(dollyN===n)clearDolly();},380);},RM?1500:2400);}
+const slotsEl=$('slots');let mode='';
+for(let i=0;i<6;i++){const b=document.createElement('button');b.className='slot';b.setAttribute('aria-label','Saved bet slot '+(i+1));b.addEventListener('click',()=>slotTap(i));slotsEl.appendChild(b);}
+const ALLKEYS=['0','00',...Array.from({length:36},(_,i)=>String(i+1))];
+function hotCold(){const last={};state.hist.forEach((h,i)=>{last[String(h)]=i;});const cnt=k=>state.hits[k]||0,li=k=>(k in last)?last[k]:-1;const hot=ALLKEYS.slice().sort((a,b)=>(cnt(b)-cnt(a))||(li(b)-li(a)));const cold=ALLKEYS.slice().sort((a,b)=>(cnt(a)-cnt(b))||(li(a)-li(b)));const distinct=ALLKEYS.filter(k=>cnt(k)>0).length,never=ALLKEYS.length-distinct;return{hot:hot.slice(0,7),cold:cold.slice(0,7),hotReady:distinct>=7,coldReady:never<=7,distinct,never};}
+function renderSlots(){const hc=hotCold();[...slotsEl.children].forEach((b,i)=>{
+if(i>=4){const isHot=i===4,ready=isHot?hc.hotReady:hc.coldReady;b.className='slot '+(isHot?'hot':'cold')+(ready?' filled':'');b.disabled=spinning||!ready;b.setAttribute('aria-label',isHot?'Bet the 7 hottest numbers':'Bet the 7 coldest numbers');b.innerHTML=`<span class="sn">${isHot?'Hot':'Cold'}</span><span class="sd">${ready?'7 corners':(isHot?hc.distinct+'/7 hit':hc.never+' not hit')}</span>`;return;}
+const s=state.saved[i];b.className='slot'+(s?' filled':'')+(mode!==''?' arm':'');b.disabled=spinning;b.innerHTML=`<span class="sn">${i+1}</span><span class="sd">${s?s.amount.toLocaleString()+' on '+s.bets.length:'empty'}</span>`;});}
+function setMode(m){mode=m;$('savebtn').classList.toggle('on',m==='save');$('delbtn').classList.toggle('on',m==='del');if(m==='save')msg('Tap a slot to save what is on the table.','');else if(m==='del')msg('Tap a slot to clear it.','');renderSlots();}
+$('savebtn').addEventListener('click',()=>{if(spinning)return;if(mode==='save'){setMode('');msg('','');return;}if(!bets.size){msg('Nothing on the table to save. Place chips first.','bad');return;}setMode('save');});
+$('delbtn').addEventListener('click',()=>{if(spinning)return;if(mode==='del'){setMode('');msg('','');return;}setMode('del');});
+function slotTap(i){if(spinning)return;
+if(i>=4){const isHot=i===4;if(mode){setMode('');msg('Hot and Cold fill themselves from the spin history; save your own bets in slots 1 to 4.','');return;}const hc=hotCold();if(!(isHot?hc.hotReady:hc.coldReady)){msg(isHot?'Hot needs 7 different numbers to have hit first.':'Cold needs the unhit numbers down to 7 or fewer first.','bad');return;}const list=isHot?hc.hot:hc.cold;if(state.chip*7>state.balance){msg(`Not enough chips for 7 corner bets of ${state.chip}.`,'bad');return;}const used=new Set(),picks=[];list.forEach(k=>{let opts;if(k==='0')opts=[1];else if(k==='00')opts=[2];else{const n=+k;opts=[n,n-1,n-3,n-4].filter(a=>a>=1&&a<=32&&a%3!==0);}const sh=opts.slice().sort(()=>Math.random()-.5);const a=sh.find(x=>!used.has(x))||sh[0];used.add(a);picks.push(a);});picks.forEach(a=>place({key:'c'+a,nums:[a,a+1,a+3,a+4],pay:8}));msg(`${isHot?'Hot':'Cold'} corners on ${list.join(', ')}.`,'');return;}
+if(mode==='save'){const list=[...bets.values()].map(b=>Object.assign({},b));const amount=list.reduce((s,b)=>s+b.amount,0);state.saved[i]={amount,bets:list};setMode('');msg(`Saved to slot ${i+1}: ${amount.toLocaleString()} on ${list.length} spot${list.length===1?'':'s'}.`,'good');render();return;}
+if(mode==='del'){state.saved[i]=null;setMode('');msg(`Slot ${i+1} cleared.`,'');render();return;}
+const s=state.saved[i];if(!s){msg('Empty slot. Put chips down, tap Save table, then this slot.','bad');return;}
+if(s.amount>state.balance){msg('Not enough chips for that saved bet.','bad');return;}
+s.bets.forEach(b=>{if(!b||!Array.isArray(b.nums)||typeof b.pay!=='number'||!(b.amount>0))return;const cur=bets.get(b.key)||{key:b.key,nums:b.nums.slice(),pay:b.pay,amount:0};cur.amount+=b.amount;bets.set(b.key,cur);stack.push({key:b.key,amount:b.amount});});state.balance-=s.amount;msg(`Slot ${i+1} is on the table.`,'');render();}
+function undo(){if(spinning)return;const p=stack.pop();if(!p)return;const b=bets.get(p.key);if(b){b.amount-=p.amount;state.balance+=p.amount;if(b.amount<=0)bets.delete(p.key);}render();}
+function clearAll(){if(spinning)return;bets.forEach(b=>state.balance+=b.amount);bets.clear();stack=[];render();}
+function repeat(){if(spinning||!state.lastBets||!state.lastBets.length)return;const tot=state.lastBets.reduce((s,b)=>s+b.amount,0);if(tot>state.balance){msg('Not enough chips to repeat that bet.','bad');return;}state.lastBets.forEach(b=>{if(!b||!Array.isArray(b.nums)||typeof b.pay!=='number'||!(b.amount>0))return;const cur=bets.get(b.key)||{key:b.key,nums:b.nums.slice(),pay:b.pay,amount:0};cur.amount+=b.amount;bets.set(b.key,cur);stack.push({key:b.key,amount:b.amount});});state.balance-=tot;render();}
+function dbl(){if(spinning)return;const tot=[...bets.values()].reduce((s,b)=>s+b.amount,0);if(!tot){msg('Nothing on the table to double.','bad');return;}if(tot>state.balance){msg('Not enough chips to double.','bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:b.amount});b.amount*=2;});state.balance-=tot;render();}
+const rack=$('chips');
+DEN.forEach(v=>{const b=document.createElement('button');b.className='cs';b.textContent=v;b.style.background=chipColor(v);b.style.color=v<5?'#262624':'#fff';b.setAttribute('aria-label',v+' chip');b.addEventListener('click',()=>{state.chip=v;selChip();save();});rack.appendChild(b);});
+function selChip(){[...rack.children].forEach((b,i)=>b.classList.toggle('sel',DEN[i]===state.chip));}
+function draw(){const k=R/115,Wd=R*2;ctx.clearRect(0,0,Wd,Wd);ctx.save();ctx.translate(R,R);ctx.beginPath();ctx.arc(0,0,R-1,0,2*Math.PI);ctx.fillStyle='#4a1b0c';ctx.fill();ctx.save();ctx.rotate(wAng);
+WHEEL.forEach((n,i)=>{const s=-Math.PI/2+i*A-A/2;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R-15*k,s,s+A);ctx.closePath();ctx.fillStyle=colorOf(n);ctx.fill();ctx.strokeStyle='#d9d6ca';ctx.lineWidth=.8;ctx.stroke();ctx.save();ctx.rotate(s+A/2);ctx.translate(R-26*k,0);ctx.rotate(Math.PI/2);ctx.fillStyle='#fff';ctx.font=`500 ${Math.max(8,Math.round(11*k))}px Oswald, "Arial Narrow", sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(n),0,0);ctx.restore();});
+ctx.beginPath();ctx.arc(0,0,R-46*k,0,2*Math.PI);ctx.fillStyle='#262624';ctx.fill();ctx.beginPath();ctx.arc(0,0,R-50*k,0,2*Math.PI);ctx.fillStyle='#5f5e5a';ctx.fill();ctx.beginPath();ctx.arc(0,0,14*k,0,2*Math.PI);ctx.fillStyle='#f3c168';ctx.fill();ctx.restore();
+ctx.beginPath();ctx.arc(bR*Math.cos(bAng),bR*Math.sin(bAng),Math.max(3.5,6*k),0,2*Math.PI);ctx.fillStyle='#f1efe8';ctx.fill();
+ctx.beginPath();ctx.moveTo(-8*k,-R+1);ctx.lineTo(8*k,-R+1);ctx.lineTo(0,-R+17*k);ctx.closePath();ctx.fillStyle='#f3c168';ctx.fill();ctx.restore();}
+function spin(){if(spinning)return;if(!bets.size){msg('Place a bet first.','bad');return;}if(mode)setMode('');clearDolly();spinning=true;render();msg('No more bets…','');
+const dr=drawPocket();pendingDraw=dr;const idx=dr.idx;
+const start=wAng,base=-idx*A,kk=Math.ceil((base-start)/(2*Math.PI)),target=base-2*Math.PI*(kk+5),dur=RM?700:4500,t0=performance.now();spinT0=t0;spinPreBal=state.balance;
+function fr(now){const t=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-t,3),eb=1-Math.pow(1-t,2.4);wAng=start+(target-start)*e;bAng=-Math.PI/2-2*Math.PI*7*(1-eb);const s=Math.max(0,(t-.55)/.45),sm=s*s*(3-2*s),k=R/115;bR=(R-8*k)-((R-8*k)-(R-38*k))*sm;draw();if(t<1)requestAnimationFrame(fr);else{spinning=false;try{resolve(WHEEL[idx]);}catch(err){failSafe(err);}}}
+requestAnimationFrame(fr);
+const myT0=t0;setTimeout(()=>{if(spinning&&spinT0===myT0)failSafe(new Error('spin timed out'));},dur+6000);}
+let spinT0=0,lastErr='',spinPreBal=0;
+function failSafe(err){lastErr=errText(err);spinning=false;try{if(!Array.isArray(state.hist))state.hist=[];if(!state.hits||typeof state.hits!=='object')state.hits={};state=normState(state);state.balance=spinPreBal;(state.table||[]).forEach(b=>{if(b&&b.amount>0)state.balance+=b.amount;});state.table=[];state.stack=[];hydrateTable();}catch(e){}try{render();}catch(e){}msg('That spin could not be scored ('+lastErr+'). Chips returned. Show Claude this message.','bad');}
+window.addEventListener('error',e=>{if(spinning)failSafe(e.error||new Error(e.message||'error'));});
+function resolve(n){let win=0,staked=0;bets.forEach(b=>{staked+=b.amount;if(b.nums.includes(n))win+=b.amount*(b.pay+1);});state.balance+=win;state.hist.push(n);if(state.hist.length>1000)state.hist=state.hist.slice(-1000);const k=String(n);state.hits[k]=(state.hits[k]||0)+1;state.lastBets=[...bets.values()].map(b=>Object.assign({},b));if(pendingDraw)state.lastDraw={raw:pendingDraw.raw,idx:pendingDraw.idx,n};bets.clear();stack=[];const net=win-staked;
+$('res').innerHTML=`<span class="big" style="background:${colorOf(n)}">${n}</span><span class="sub">${nameOf(n)}</span>`;
+msg(win>0?`Paid ${win.toLocaleString()} · net ${net>=0?'+':'−'}${Math.abs(net).toLocaleString()}`:`No hit · −${staked.toLocaleString()}`,net>=0?'good':'bad');
+render();showDolly(n);if(net>0)fireworks(net);else if(net<0)skulls(net);else flashLabel('EVEN','');}
+const fxc=$('fxc'),fxl=$('fxl'),fxs=$('fxs'),fxr=$('fxr'),fctx=fxc.getContext('2d');let fxRun=0;
+const SKULL='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g fill="#f1efe8"><g transform="rotate(45 50 64)"><rect x="10" y="60" width="80" height="9" rx="4.5"/><circle cx="12" cy="59" r="5.5"/><circle cx="12" cy="70" r="5.5"/><circle cx="88" cy="59" r="5.5"/><circle cx="88" cy="70" r="5.5"/></g><g transform="rotate(-45 50 64)"><rect x="10" y="60" width="80" height="9" rx="4.5"/><circle cx="12" cy="59" r="5.5"/><circle cx="12" cy="70" r="5.5"/><circle cx="88" cy="59" r="5.5"/><circle cx="88" cy="70" r="5.5"/></g><circle cx="50" cy="40" r="27"/><rect x="33" y="54" width="34" height="20" rx="7"/></g><g fill="#14301a"><ellipse cx="39.5" cy="40" rx="7.5" ry="8.5"/><ellipse cx="60.5" cy="40" rx="7.5" ry="8.5"/><path d="M50 47l-4.5 9h9z"/><rect x="40" y="63" width="3" height="9" rx="1"/><rect x="46" y="63" width="3" height="9" rx="1"/><rect x="52" y="63" width="3" height="9" rx="1"/><rect x="58" y="63" width="3" height="9" rx="1"/></g></svg>';
+function flashLabel(t,kind){fxl.textContent=t;fxl.className=kind||'';void fxl.offsetWidth;fxl.classList.add('pop');}
+function fxSize(){fxc.width=innerWidth*dpr;fxc.height=innerHeight*dpr;fxc.style.width=innerWidth+'px';fxc.style.height=innerHeight+'px';fctx.setTransform(dpr,0,0,dpr,0,0);}
+function fireworks(net){flashLabel('WIN +'+net.toLocaleString(),'good');if(RM)return;fxSize();const id=++fxRun,parts=[],colors=['#f3c168','#f1efe8','#e0523f','#8ed67e','#5dcaa5','#f0997b','#85b7eb'],Wd=innerWidth,Hd=innerHeight;let bursts=0;const maxB=7,t0=performance.now();let last=t0;
+function burst(){const x=Wd*(.15+Math.random()*.7),y=Hd*(.1+Math.random()*.45),col=colors[Math.floor(Math.random()*colors.length)],n=70+Math.floor(Math.random()*40);for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*5.5;parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,decay:.012+Math.random()*.012,col,r:1.5+Math.random()*1.6});}bursts++;}
+burst();
+function frame(now){if(id!==fxRun)return;const dt=Math.min(2,(now-last)/16.7);last=now;fctx.globalCompositeOperation='destination-out';fctx.fillStyle='rgba(0,0,0,0.2)';fctx.fillRect(0,0,Wd,Hd);fctx.globalCompositeOperation='source-over';
+if(bursts<maxB&&Math.random()<.07*dt)burst();
+for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.vy+=.06*dt;p.vx*=Math.pow(.985,dt);p.vy*=Math.pow(.985,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=p.decay*dt;if(p.life<=0){parts.splice(i,1);continue;}fctx.globalAlpha=Math.max(0,p.life);fctx.fillStyle=p.col;fctx.beginPath();fctx.arc(p.x,p.y,p.r,0,Math.PI*2);fctx.fill();}
+fctx.globalAlpha=1;
+if((bursts<maxB||parts.length)&&now-t0<4500)requestAnimationFrame(frame);else fctx.clearRect(0,0,Wd,Hd);}
+requestAnimationFrame(frame);}
+function skulls(net){flashLabel('LOST −'+(-net).toLocaleString(),'bad');if(RM)return;fxr.classList.remove('on');void fxr.offsetWidth;fxr.classList.add('on');
+for(let i=0;i<11;i++){const s=document.createElement('div');s.className='skull';s.innerHTML=SKULL;const size=38+Math.random()*54;s.style.cssText=`left:${3+Math.random()*84}%;width:${size}px;height:${size}px;animation-delay:${(Math.random()*.9).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.3).toFixed(2)}s;--rot:${Math.round(Math.random()*80-40)}deg`;fxs.appendChild(s);s.addEventListener('animationend',()=>s.remove());}}
+const secureRNG=!!(window.crypto&&crypto.getRandomValues),LIM=4294967296-(4294967296%38);let pendingDraw=null;
+function drawPocket(){if(!secureRNG)return{raw:null,idx:Math.floor(Math.random()*38)};const buf=new Uint32Array(1);let v;do{crypto.getRandomValues(buf);v=buf[0];}while(v>=LIM);return{raw:v,idx:v%38};}
+function gammln(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,.1208650973866179e-2,-.5395239384953e-5];let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function gammq(a,x){if(x<=0)return 1;if(x<a+1){let ap=a,sum=1/a,del=sum;for(let n=0;n<1000;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-13)break;}return Math.max(0,1-sum*Math.exp(-x+a*Math.log(x)-gammln(a)));}
+let b=x+1-a,c=1/1e-300,d=1/b,h=d;for(let i=1;i<1000;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-13)break;}return Math.exp(-x+a*Math.log(x)-gammln(a))*h;}
+function greenStats(){let gc=0,lastG=-1,run=0,longest=0;state.hist.forEach((h,i)=>{if(isG(h)){gc++;lastG=i;run=0;}else{run++;if(run>longest)longest=run;}});return{greens:gc,avg:gc?(lastG+1)/gc:null,longest,current:run};}
+function fairText(){const N=state.hist.length,cnt=k=>state.hits[k]||0,g=cnt('0')+cnt('00'),gs=greenStats();let r=0,bk=0;for(let n=1;n<=36;n++){if(reds.includes(n))r+=cnt(String(n));else bk+=cnt(String(n));}
+const e1=N/38;let chi=0;['0','00',...Array.from({length:36},(_,i)=>String(i+1))].forEach(k=>{const o=cnt(k);if(e1>0)chi+=(o-e1)*(o-e1)/e1;});const p=N?gammq(18.5,chi/2):1;
+$('fairhow').textContent=secureRNG?'Each spin asks your phone for a cryptographically secure random number (crypto.getRandomValues, the same generator used for encryption keys), throws out the rare values that would favor any pocket, and takes the remainder mod 38. Every pocket is exactly 1 in 38. The number is drawn before your bets are looked at, and nothing in the game reads your bets, your balance or past spins when choosing it.':'Secure random is not available in this browser, so spins fall back to Math.random. Every pocket is still 1 in 38, but the generator is not cryptographic.';
+const f1=x=>x.toFixed(1);
+$('fairtbl').innerHTML=`<tr><td>Spins on this wheel</td><td>${N.toLocaleString()}</td></tr><tr><td>Greens (0 and 00), expected ${f1(N*2/38)}</td><td>${g}</td></tr><tr><td>Average spins per green, fair wheel 19.0</td><td>${gs.avg===null?'–':f1(gs.avg)}</td></tr><tr><td>Longest run without a green</td><td>${gs.longest}</td></tr><tr><td>Reds, expected ${f1(N*18/38)}</td><td>${r}</td></tr><tr><td>Blacks, expected ${f1(N*18/38)}</td><td>${bk}</td></tr><tr><td>Spread across all 38 pockets (chi-square, 37 df)</td><td>${N?f1(chi):'–'}</td></tr><tr><td>How often a fair wheel is at least this lumpy</td><td>${N?(p*100).toFixed(1)+'%':'–'}</td></tr>`;
+const v=$('fairverdict');if(N<100){v.textContent='Too few spins to judge the spread yet. About 100 spins gives a rough read, 200 or more a solid one.';v.className='verdict warn';}else if(p>=.05){v.textContent='Within the normal range for a fair wheel.';v.className='verdict';}else if(p>=.01){v.textContent='A little lumpy, but a fair wheel does this about 1 time in 20.';v.className='verdict warn';}else{v.textContent='Unusually lumpy for a fair wheel, about 1 time in 100 or rarer. Keep spinning; if it stays here, something is off.';v.className='verdict bad';}
+const ld=state.lastDraw;$('fairlast').innerHTML=ld&&ld.raw!==null&&ld.raw!==undefined?`Last draw: <span class="mono">${ld.raw.toLocaleString()}</span> mod 38 = <span class="mono">${ld.idx}</span>, so ${ld.idx===0?'the 0 pocket itself':'pocket '+ld.idx+' counting clockwise from 0'}: <span class="mono">${ld.n}</span>.`:'';}
+function fairFooter(){$('fairver').textContent=syncText();$('retrybtn').hidden=!HAS_RUNTIME||cloudStatus==='on'||cloudStatus==='connecting'||cloudStatus==='write failed';}
+function openFair(){fairText();fairFooter();$('fairpanel').hidden=false;}
+$('fairbtn').addEventListener('click',openFair);
+$('retrybtn').addEventListener('click',()=>{connectCloud().then(fairFooter);fairFooter();setTimeout(fairFooter,1500);setTimeout(fairFooter,4000);});
+setInterval(()=>{if(!$('fairpanel').hidden)fairFooter();},2000);
+const b64e=s=>btoa(unescape(encodeURIComponent(s))),b64d=s=>decodeURIComponent(escape(atob(s)));
+function backupCode(){return 'DR1:'+b64e(JSON.stringify(normState(state)));}
+function showBackup(mode){const box=$('backupbox'),ta=$('backuptxt');box.hidden=false;$('copybtn').hidden=mode!=='backup';$('applybtn').hidden=mode!=='import';if(mode==='backup'){ta.readOnly=true;ta.value=backupCode();$('backupnote').textContent='This text is your whole game: balance, history, saved bets. Copy it somewhere safe (Notes works). Paste it into "Restore a backup" on any phone to get the game back.';ta.focus();ta.select();}else{ta.readOnly=false;ta.value='';$('backupnote').textContent='Paste a backup text here, then tap Restore from this text. It replaces the game on this phone.';ta.focus();}}
+$('backupbtn').addEventListener('click',()=>showBackup('backup'));
+$('importbtn').addEventListener('click',()=>showBackup('import'));
+$('backupclose').addEventListener('click',()=>{$('backupbox').hidden=true;});
+$('copybtn').addEventListener('click',async()=>{const ta=$('backuptxt');try{await navigator.clipboard.writeText(ta.value);$('backupnote').textContent='Copied. Paste it into Notes or a message to yourself.';}catch(e){ta.focus();ta.select();$('backupnote').textContent='Copy was blocked here. The text is selected: long-press it and choose Copy.';}});
+$('applybtn').addEventListener('click',()=>{if(spinning)return;const raw=$('backuptxt').value.trim();try{if(!raw.startsWith('DR1:'))throw new Error('not a backup');const obj=JSON.parse(b64d(raw.slice(4)));if(typeof obj.balance!=='number')throw new Error('not a backup');bets.clear();stack=[];if(mode)setMode('');clearDolly();state=normState(obj);state.rev=(state.rev||0)+1;hydrateTable();lastSig='';selChip();render();$('backupbox').hidden=true;$('res').innerHTML='';msg(`Backup restored: ${state.balance.toLocaleString()} chips, ${state.hist.length} spins.`,'good');fairText();}catch(e){$('backupnote').textContent='That text is not a Dave\'s Roulette backup. Paste the whole thing, starting with DR1:';}});
+$('fairclose').addEventListener('click',()=>{$('fairpanel').hidden=true;});
+$('fairpanel').addEventListener('click',e=>{if(e.target===$('fairpanel'))$('fairpanel').hidden=true;});
+$('undo').addEventListener('click',undo);$('clear').addEventListener('click',clearAll);$('rep').addEventListener('click',repeat);$('dbl').addEventListener('click',dbl);$('spin').addEventListener('click',spin);
+$('reload').addEventListener('click',()=>{if(spinning)return;state.balance+=1000;msg('Added 1,000 chips.','');render();});
+let armed=false,armT=null;
+$('reset').addEventListener('click',()=>{if(spinning)return;if(!armed){armed=true;$('reset').textContent='Tap again to reset everything';armT=setTimeout(()=>{armed=false;$('reset').textContent='Reset game';},3000);return;}
+clearTimeout(armT);armed=false;$('reset').textContent='Reset game';bets.clear();stack=[];if(mode)setMode('');clearDolly();state={balance:1000,hist:[],hits:{},lastBets:null,chip:10,saved:state.saved,gen:(state.gen||0)+1,restored:state.restored};$('res').innerHTML='';msg('Fresh table. 1,000 chips. Saved bets kept.','');selChip();render();});
+const standalone=window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+const iOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let hintOff=false;try{hintOff=localStorage.getItem(KEY+'-hint')==='off';}catch(e){}
+if(iOS&&!standalone&&!hintOff)$('install').hidden=false;
+$('hintclose').addEventListener('click',()=>{$('install').hidden=true;try{localStorage.setItem(KEY+'-hint','off');}catch(e){}});
+const fsb=$('fsbtn'),ICON_OUT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>',ICON_IN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg>';
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
+function fsLabel(){const on=!!fsEl();fsb.innerHTML=on?ICON_IN:ICON_OUT;fsb.setAttribute('aria-label',on?'Exit full screen':'Full screen');fsb.title=on?'Exit full screen':'Full screen';}
+if(standalone)fsb.hidden=true;
+fsb.addEventListener('click',async()=>{try{if(fsEl()){if(document.exitFullscreen)await document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();return;}
+const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen({navigationUI:'hide'});else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();else throw new Error('unsupported');}
+catch(e){msg(iOS?'Safari on iPhone will not let a page go full screen. Add this page to your Home Screen and open it from there: no browser bars at all.':'Full screen was refused here. Open the page in its own browser tab and try again.','');}});
+document.addEventListener('fullscreenchange',()=>{fsLabel();relayout();});document.addEventListener('webkitfullscreenchange',()=>{fsLabel();relayout();});
+fsLabel();
+let lt=null;function relayout(){if(lt)cancelAnimationFrame(lt);lt=requestAnimationFrame(()=>{lt=null;layout();});}
+window.addEventListener('resize',relayout);window.addEventListener('orientationchange',()=>setTimeout(layout,250));
+selChip();layout();
+if('serviceWorker' in navigator&&location.protocol==='https:'){try{navigator.serviceWorker.register('./sw.js').then(r=>{try{r.update();}catch(e){}}).catch(()=>{});}catch(e){}}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+</script>
+</body>
+</html>
