@@ -208,7 +208,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='25';
+const VERSION='26';
 const DEN=[1,5,10,25,50,100];
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
@@ -423,7 +423,8 @@ fsLabel();
 let lt=null;function relayout(){if(lt)cancelAnimationFrame(lt);lt=requestAnimationFrame(()=>{lt=null;layout();});}
 window.addEventListener('resize',relayout);window.addEventListener('orientationchange',()=>setTimeout(layout,250));
 selChip();layout();
-if('serviceWorker' in navigator&&location.protocol==='https:'){try{navigator.serviceWorker.register('./sw.js').then(r=>{try{r.update();}catch(e){}}).catch(()=>{});}catch(e){}}
+if('serviceWorker' in navigator&&location.protocol==='https:'){try{let swReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(swReloaded||bets.size||spinning)return;swReloaded=true;location.reload();});navigator.serviceWorker.register('./sw.js').then(r=>{try{r.update();}catch(e){}}).catch(()=>{});}catch(e){}}
+if(!HAS_RUNTIME&&location.protocol==='https:'){setTimeout(()=>{fetch('./version.txt',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();if(v&&v!==VERSION&&!bets.size&&!spinning){let k='';try{k=sessionStorage.getItem(KEY+'-upd')||'';}catch(e){}if(k!==v){try{sessionStorage.setItem(KEY+'-upd',v);}catch(e){}location.reload();}else{msg('Build '+v+' is ready. Close the app fully and reopen it to get it.','');}}}).catch(()=>{});},1500);}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 </script>
 </body>
