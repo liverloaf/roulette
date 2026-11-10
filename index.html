@@ -206,7 +206,11 @@ canvas{display:block}
 <div id="streakpanel" hidden role="dialog" aria-modal="true" aria-labelledby="streakh" class="panelwrap">
   <div class="fcard">
     <h2 id="streakh">Droughts</h2>
-    <p>A drought is a stretch of spins with no 0 or 00, counted from your own history. Every number here comes from finished droughts; the one you're in is shown for reference but not counted.</p>
+    <p><b>What a drought is.</b> A run of spins with no green (0 or 00). A green ends it, and a new one starts on the next spin.</p>
+    <p><b>What the number in the top bar means.</b> Count all your droughts so far, the one you're in included. Then count how many of the earlier ones got at least as long as this one. Divide. Example: you're 30 spins in, you've had 3 droughts in all, and 1 earlier one got to 30 or more. 1 of 3 is 33%.</p>
+    <p><b>How to read it.</b> A low number means a drought this long is rare on your wheel. A high number means it's common.</p>
+    <p id="stknow" class="mono"></p>
+    <p><b>"Fair wheel" rows</b> show what a perfectly fair wheel does over a very long time, so you can compare your wheel against it.</p>
     <table id="stksum"></table>
     <table class="stk" id="stktbl"></table>
     <div class="frow"><button class="ghost" id="streakclose">Close</button></div>
@@ -228,7 +232,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='32';
+const VERSION='33';
 const DEN=[1,5,10,25,50,100];
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
@@ -407,6 +411,7 @@ function fairFooter(){$('fairver').textContent=syncText();$('retrybtn').hidden=!
 function streakText(){const d=dryStats(),pc=(a,b)=>b?` (${Math.round(100*a/b)}%)`:'',done=d.runs.length,avg=done?(d.runs.reduce((s,r)=>s+r,0)/done):null;
 let s=`<tr><td>Finished droughts so far</td><td>${done}</td></tr><tr><td>Current drought, not counted</td><td>${d.L} spin${d.L===1?'':'s'}</td></tr>`;
 if(d.L>0)s+=`<tr><td>Earlier droughts that reached ${d.L} or more, as a share of all ${d.total} droughts (the current one counted)</td><td>${d.everReached} of ${d.total}${pc(d.everReached,d.total)}</td></tr><tr><td>Fair wheel: droughts that reach ${d.L} or more</td><td>${(d.theory*100).toFixed(1)}%</td></tr><tr><td>Times a green came on the very next spin after ${d.L} misses</td><td>${d.everReached?d.endedHere+' of '+d.everReached+pc(d.endedHere,d.everReached):'no data yet'}</td></tr>`;
+$('stknow').textContent=d.L>0?`Right now: you are ${d.L} spin${d.L===1?'':'s'} into a drought. You have had ${d.total} drought${d.total===1?'':'s'} in all. ${d.everReached} earlier one${d.everReached===1?'':'s'} got to ${d.L} or more. ${d.everReached} of ${d.total} = ${Math.round(100*d.everReached/d.total)}%.`:`Right now: a green just hit, so a new drought starts on the next spin. You have had ${done} finished drought${done===1?'':'s'} so far.`;
 s+=`<tr><td>Longest drought, current one included</td><td>${d.longest}</td></tr><tr><td>Average length of finished droughts, fair wheel 18.0</td><td>${avg===null?'–':avg.toFixed(1)}</td></tr>`;$('stksum').innerHTML=s;
 let t='<tr><th>Length</th><th>Ended at this length</th><th>Reached this length</th><th>Fair wheel reaches it</th></tr>';for(let n=0;n<=d.longest;n++){const ended=d.runs.filter(r=>r===n).length,reach=d.runs.filter(r=>r>=n).length;t+=`<tr${n===d.L?' class="cur"':''}><td>${n}${n===d.L?' (now)':''}</td><td>${ended}</td><td>${reach} of ${done}${pc(reach,done)}</td><td>${(Math.pow(36/38,n)*100).toFixed(1)}%</td></tr>`;}$('stktbl').innerHTML=t;}
 function openStreaks(){streakText();$('streakpanel').hidden=false;}
