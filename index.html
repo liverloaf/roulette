@@ -44,7 +44,7 @@ button{font:inherit;cursor:pointer}
 .stat{display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex:none}
 .stat .l{font-size:clamp(9.5px,1.35vw,11px);color:var(--muted)}
 .stat .v{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
-#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#avg{min-width:1.7em}#oddsv{min-width:1.9em}
+#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#oddsv{min-width:1.9em}
 @media (max-width:760px){.fw2{display:none}}
 .statbtn{background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
 .statbtn .chev{color:var(--gold);font-size:16px;line-height:1;margin-left:-2px}
@@ -86,10 +86,10 @@ canvas{display:block}
 .chip{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:2px dashed rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;z-index:3;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .rowA,.rowB{display:flex;align-items:center;gap:8px;flex:none}
 .rack{display:flex;gap:6px;align-items:center}
-.cs{width:34px;height:34px;border-radius:50%;padding:0;border:2px dashed rgba(255,255,255,.85);color:#fff;font-size:11.5px;font-weight:600;box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.cs{width:32px;height:32px;border-radius:50%;padding:0;border:2px dashed rgba(255,255,255,.85);color:#fff;font-size:11.5px;font-weight:600;box-shadow:0 2px 3px rgba(0,0,0,.35)}
 .cs.sel{outline:3px solid var(--gold);outline-offset:2px}
 .acts{display:flex;gap:6px;margin-left:auto}
-.acts button{height:36px;min-width:56px;padding:0 10px;border-radius:9px;border:1px solid rgba(241,239,232,.45);background:transparent;color:var(--cream);font-size:12.5px;font-weight:600;white-space:nowrap}
+.acts button{height:36px;min-width:46px;padding:0 7px;border-radius:9px;border:1px solid rgba(241,239,232,.45);background:transparent;color:var(--cream);font-size:12.5px;font-weight:600;white-space:nowrap}
 .savedctl{display:flex;flex-direction:column;gap:4px;flex:none}
 .mini{background:transparent;color:var(--cream);border:1px solid rgba(241,239,232,.45);border-radius:6px;padding:0 7px;height:18px;font-size:10.5px;line-height:1;white-space:nowrap}
 .mini.on{background:var(--gold);color:var(--felt-deep);border-color:var(--gold)}
@@ -123,10 +123,11 @@ canvas{display:block}
 #fxl.bad{color:var(--lose)}
 #fxl.pop{animation:pop 2.4s ease-out forwards}
 @keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}24%{transform:translate(-50%,-50%) scale(1)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
-.fair{flex:none;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;border:1px solid rgba(243,193,104,.6);background:transparent;color:var(--gold);font-size:11px;font-weight:600;white-space:nowrap}
+.badges{margin-left:auto;display:flex;gap:6px;align-self:center;flex:none}
+.fair{flex:none;align-self:center;display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;border:1px solid rgba(243,193,104,.6);background:transparent;color:var(--gold);font-size:11px;font-weight:600;white-space:nowrap}
 .fair svg{width:12px;height:12px}
-#fairpanel,#streakpanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
-#fairpanel[hidden],#streakpanel[hidden]{display:none}
+#fairpanel,#streakpanel,#optpanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
+#fairpanel[hidden],#streakpanel[hidden],#optpanel[hidden]{display:none}
 #streakpanel .fcard table:not(.stk){width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin:4px 0 8px}
 #streakpanel .fcard table:not(.stk) td{padding:3px 0;border-bottom:1px solid var(--line);vertical-align:top}
 #streakpanel .fcard table:not(.stk) td:last-child{text-align:right;white-space:nowrap;padding-left:12px}
@@ -156,12 +157,11 @@ canvas{display:block}
 <body>
 <div id="app">
   <header id="top">
-    <div class="stat"><span class="l">Balance</span><span class="v" id="bal">1,000</span></div>
+    <div class="stat"><span class="l">$ Balance</span><span class="v" id="bal">100</span></div>
     <div class="stat"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
-    <div class="stat"><span class="l">No green</span><span class="v" id="streak">0</span></div>
-    <div class="stat"><span class="l">Spins/green</span><span class="v" id="avg">–</span><span class="l" id="avgnote">(19 fair)</span></div>
+    <div class="stat"><span class="l">Drought</span><span class="v" id="streak">0</span></div>
     <button class="stat statbtn" id="streakbtn" aria-haspopup="dialog" title="Open the streak page"><span class="l" id="oddsl">Dry spells</span><span class="v" id="oddsv">0</span><span class="chev" aria-hidden="true">›</span></button>
-    <button class="fair" id="fairbtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span class="fw">Fair <span class="fw2">wheel</span></span></button>
+    <span class="badges"><button class="fair" id="optbtn" aria-haspopup="dialog" title="Game options"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="#14301a"/><circle cx="15" cy="12" r="2.2" fill="#14301a"/><circle cx="8" cy="17" r="2.2" fill="#14301a"/></svg><span class="fw2">Options</span></button><button class="fair" id="fairbtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span class="fw">Fair <span class="fw2">wheel</span></span></button></span>
   </header>
   <div id="main">
     <aside id="left" aria-label="Wheel and results">
@@ -175,7 +175,7 @@ canvas{display:block}
       <div id="boardwrap"><div id="grid"></div></div>
       <div class="rowA">
         <div class="rack" id="chips" aria-label="Chip rack"></div>
-        <div class="acts"><button id="undo">Undo</button><button id="clear">Clear</button><button id="rep">Repeat</button><button id="dbl">2x</button></div>
+        <div class="acts"><button id="undo">Undo</button><button id="clear">Clear</button><button id="rep">Repeat</button><button id="dbl">2x</button><button id="plus1">+1</button></div>
       </div>
       <div class="rowB">
         <div class="savedctl"><button class="mini" id="savebtn">Save table</button><button class="mini" id="delbtn">Delete</button></div>
@@ -197,10 +197,18 @@ canvas{display:block}
     <table id="fairtbl"></table>
     <p id="fairverdict" class="verdict"></p>
     <p id="fairlast"></p>
-    <div class="small"><button class="ghost" id="reload">Reload 1,000 chips</button><button class="ghost" id="reset">Reset game</button><button class="ghost" id="backupbtn">Back up game</button><button class="ghost" id="importbtn">Restore a backup</button></div>
-    <div id="backupbox" hidden><p id="backupnote"></p><textarea id="backuptxt" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" style="width:100%;box-sizing:border-box;font-family:var(--body);font-size:11px;background:rgba(241,239,232,.08);color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:6px"></textarea><div class="frow" style="justify-content:flex-start;margin:6px 0 10px;flex-wrap:wrap"><button class="ghost" id="copybtn" hidden>Copy</button><button class="ghost" id="selbtn" hidden>Select all</button><button class="ghost" id="applybtn" hidden>Restore from this text</button><button class="ghost" id="backupclose">Done</button></div></div>
-    <p id="fairver" style="font-size:11px"></p>
+        <p id="fairver" style="font-size:11px"></p>
     <div class="frow"><button class="ghost" id="retrybtn" hidden>Retry sync</button><button class="ghost" id="fairclose">Close</button></div>
+  </div>
+</div>
+<div id="optpanel" hidden role="dialog" aria-modal="true" aria-labelledby="opth">
+  <div class="fcard">
+    <h2 id="opth">Game options</h2>
+    <p><b>Starting bank.</b> What a new game starts with, and what Reload adds to your balance.</p>
+    <div class="frow" style="justify-content:flex-start;align-items:center;gap:8px;margin:0 0 12px;flex-wrap:wrap"><span style="font-size:15px;color:var(--cream)">$</span><input id="bankin" type="number" inputmode="numeric" min="1" step="1" style="width:120px;font:inherit;font-size:15px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(241,239,232,.08);color:var(--cream)"><button class="ghost" id="banksave">Save</button><span id="banknote" style="font-size:12px;color:var(--muted)"></span></div>
+    <div class="small"><button class="ghost" id="reload">Reload bank</button><button class="ghost" id="reset">New game</button><button class="ghost" id="backupbtn">Back up game</button><button class="ghost" id="importbtn">Restore a backup</button></div>
+    <div id="backupbox" hidden><p id="backupnote"></p><textarea id="backuptxt" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" style="width:100%;box-sizing:border-box;font-family:var(--body);font-size:11px;background:rgba(241,239,232,.08);color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:6px"></textarea><div class="frow" style="justify-content:flex-start;margin:6px 0 10px;flex-wrap:wrap"><button class="ghost" id="copybtn" hidden>Copy</button><button class="ghost" id="selbtn" hidden>Select all</button><button class="ghost" id="applybtn" hidden>Restore from this text</button><button class="ghost" id="backupclose">Done</button></div></div>
+    <div class="frow"><button class="ghost" id="optclose">Close</button></div>
   </div>
 </div>
 <div id="streakpanel" hidden role="dialog" aria-modal="true" aria-labelledby="streakh" class="panelwrap">
@@ -232,12 +240,12 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='33';
+const VERSION='34';
 const DEN=[1,5,10,25,50,100];
-const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt'];
+const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
-function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:1000,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=1000;if(!DEN.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;return out;}
-function contentSig(s){const n=normState(s);return JSON.stringify({b:n.balance,h:n.hist,k:n.hits,l:n.lastBets,c:n.chip,s:n.saved,g:n.gen,t:n.table,q:n.stack,r:!!n.restored});}
+function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:100,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=100;if(!DEN.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;if(!out.opts||typeof out.opts!=='object'||Array.isArray(out.opts))out.opts={};out.opts.bank=Math.max(1,Math.min(1e9,Math.floor(+out.opts.bank||100)));return out;}
+function contentSig(s){const n=normState(s);return JSON.stringify({b:n.balance,h:n.hist,k:n.hits,l:n.lastBets,c:n.chip,s:n.saved,g:n.gen,t:n.table,q:n.stack,r:!!n.restored,o:n.opts});}
 let state=normState({});
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s.balance==='number'&&Array.isArray(s.hist))state=normState(s);}catch(e){}
 let bets=new Map(),stack=[],spinning=false,wAng=0,bAng=-Math.PI/2,bR=80,R=80;
@@ -325,11 +333,10 @@ bets.forEach(b=>{tot+=b.amount;const d=document.createElement('div');d.className
 if(outEl[b.key]){d.style.left='50%';d.style.top='50%';outEl[b.key].appendChild(d);}else{const p=posFor(b.key);if(!p)return;d.style.left=p[0]+'px';d.style.top=p[1]+'px';grid.appendChild(d);}});
 $('bal').textContent=state.balance.toLocaleString();$('bet').textContent=tot.toLocaleString();
 let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;}$('streak').textContent=s;$('spins').textContent=state.hist.length.toLocaleString();
-const gs=greenStats();$('avg').textContent=gs.avg===null?'–':gs.avg.toFixed(1);$('avgnote').textContent=gs.avg===null?(state.hist.length?`(none in ${state.hist.length})`:'(19 fair)'):'(19 fair)';
 const ds=dryStats();if(ds.L===0){$('oddsl').textContent='Droughts';$('oddsv').textContent=String(ds.runs.length);}else{$('oddsl').textContent=`Droughts ≥${ds.L}`;$('oddsv').textContent=Math.round(100*ds.everReached/ds.total)+'%';}
 $('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
 for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
-['undo','clear','dbl','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
+['undo','clear','dbl','plus1','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
 renderSlots();positionDolly();save();}
 let dollyN=null,dollyT=null,dollyT2=null;
 function clearDolly(){clearTimeout(dollyT);clearTimeout(dollyT2);dollyT=dollyT2=null;dollyN=null;const old=grid.querySelector('.dolly');if(old)old.remove();Object.values(cells).forEach(c=>c.classList.remove('win'));}
@@ -356,6 +363,7 @@ s.bets.forEach(b=>{if(!b||!Array.isArray(b.nums)||typeof b.pay!=='number'||!(b.a
 function undo(){if(spinning)return;const p=stack.pop();if(!p)return;const b=bets.get(p.key);if(b){b.amount-=p.amount;state.balance+=p.amount;if(b.amount<=0)bets.delete(p.key);}render();}
 function clearAll(){if(spinning)return;bets.forEach(b=>state.balance+=b.amount);bets.clear();stack=[];render();}
 function repeat(){if(spinning||!state.lastBets||!state.lastBets.length)return;const tot=state.lastBets.reduce((s,b)=>s+b.amount,0);if(tot>state.balance){msg('Not enough chips to repeat that bet.','bad');return;}state.lastBets.forEach(b=>{if(!b||!Array.isArray(b.nums)||typeof b.pay!=='number'||!(b.amount>0))return;const cur=bets.get(b.key)||{key:b.key,nums:b.nums.slice(),pay:b.pay,amount:0};cur.amount+=b.amount;bets.set(b.key,cur);stack.push({key:b.key,amount:b.amount});});state.balance-=tot;render();}
+function plusOne(){if(spinning)return;if(!bets.size){msg('Nothing on the table to add to.','bad');return;}const unit=state.chip,tot=unit*bets.size;if(tot>state.balance){msg(`Not enough chips to add ${unit} to each of ${bets.size} spot${bets.size===1?'':'s'}.`,'bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:unit});b.amount+=unit;});state.balance-=tot;render();}
 function dbl(){if(spinning)return;const tot=[...bets.values()].reduce((s,b)=>s+b.amount,0);if(!tot){msg('Nothing on the table to double.','bad');return;}if(tot>state.balance){msg('Not enough chips to double.','bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:b.amount});b.amount*=2;});state.balance-=tot;render();}
 const rack=$('chips');
 DEN.forEach(v=>{const b=document.createElement('button');b.className='cs';b.textContent=v;b.style.background=chipColor(v);b.style.color=v<5?'#262624':'#fff';b.setAttribute('aria-label',v+' chip');b.addEventListener('click',()=>{state.chip=v;selChip();save();});rack.appendChild(b);});
@@ -433,11 +441,15 @@ $('selbtn').addEventListener('click',()=>{selectAllText($('backuptxt'));$('backu
 $('applybtn').addEventListener('click',()=>{if(spinning)return;const raw=$('backuptxt').value;try{const obj=parseBackup(raw);bets.clear();stack=[];if(mode)setMode('');clearDolly();state=normState(obj);state.rev=(state.rev||0)+1;hydrateTable();lastSig='';selChip();render();$('backupbox').hidden=true;$('res').innerHTML='';msg(`Backup restored: ${state.balance.toLocaleString()} chips, ${state.hist.length} spins.`,'good');fairText();}catch(e){const s=String(raw||'').replace(/\s/g,''),n=s.length,why=e&&e.message,diag=` Received ${n.toLocaleString()} characters, starting "${s.slice(0,12)}" and ending "${s.slice(-12)}". Screenshot this for Claude.`;$('backupnote').textContent=(why==='prefix'?'That text decoded, but not into a game.':why==='short'?'Only a few characters came through.':'That backup could not be decoded; it looks cut off or altered.')+diag;}});
 $('fairclose').addEventListener('click',()=>{$('fairpanel').hidden=true;});
 $('fairpanel').addEventListener('click',e=>{if(e.target===$('fairpanel'))$('fairpanel').hidden=true;});
-$('undo').addEventListener('click',undo);$('clear').addEventListener('click',clearAll);$('rep').addEventListener('click',repeat);$('dbl').addEventListener('click',dbl);$('spin').addEventListener('click',spin);
-$('reload').addEventListener('click',()=>{if(spinning)return;state.balance+=1000;msg('Added 1,000 chips.','');render();});
+$('undo').addEventListener('click',undo);$('clear').addEventListener('click',clearAll);$('rep').addEventListener('click',repeat);$('dbl').addEventListener('click',dbl);$('plus1').addEventListener('click',plusOne);$('spin').addEventListener('click',spin);
+$('reload').addEventListener('click',()=>{if(spinning)return;const bank=state.opts.bank;state.balance+=bank;msg(`Added $${bank.toLocaleString()} to your balance.`,'');render();});
+function bankLabels(){const b=state.opts.bank.toLocaleString();$('reload').textContent=`Reload bank (+$${b})`;if(!armed)$('reset').textContent=`New game ($${b})`;}
+function openOptions(){$('bankin').value=state.opts.bank;$('banknote').textContent='';$('backupbox').hidden=true;bankLabels();$('optpanel').hidden=false;}
+$('optbtn').addEventListener('click',openOptions);$('optclose').addEventListener('click',()=>{$('optpanel').hidden=true;});$('optpanel').addEventListener('click',e=>{if(e.target===$('optpanel'))$('optpanel').hidden=true;});
+$('banksave').addEventListener('click',()=>{const v=Math.floor(+$('bankin').value);if(!(v>=1)){$('banknote').textContent='Enter a whole number, 1 or more.';return;}state.opts.bank=Math.min(1e9,v);$('bankin').value=state.opts.bank;bankLabels();render();$('banknote').textContent=`Saved. New games start with $${state.opts.bank.toLocaleString()}.`;});
 let armed=false,armT=null;
-$('reset').addEventListener('click',()=>{if(spinning)return;if(!armed){armed=true;$('reset').textContent='Tap again to reset everything';armT=setTimeout(()=>{armed=false;$('reset').textContent='Reset game';},3000);return;}
-clearTimeout(armT);armed=false;$('reset').textContent='Reset game';bets.clear();stack=[];if(mode)setMode('');clearDolly();state={balance:1000,hist:[],hits:{},lastBets:null,chip:10,saved:state.saved,gen:(state.gen||0)+1,restored:state.restored};$('res').innerHTML='';msg('Fresh table. 1,000 chips. Saved bets kept.','');selChip();render();});
+$('reset').addEventListener('click',()=>{if(spinning)return;if(!armed){armed=true;$('reset').textContent='Tap again to start a new game';armT=setTimeout(()=>{armed=false;bankLabels();},3000);return;}
+clearTimeout(armT);armed=false;bets.clear();stack=[];if(mode)setMode('');clearDolly();const bank=state.opts.bank;state=normState({balance:bank,chip:state.chip,saved:state.saved,gen:(state.gen||0)+1,restored:state.restored,opts:state.opts});hydrateTable();bankLabels();$('res').innerHTML='';msg(`New game. $${bank.toLocaleString()} to start. Saved bets kept.`,'');selChip();render();$('optpanel').hidden=true;});
 const standalone=window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
 const iOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let hintOff=false;try{hintOff=localStorage.getItem(KEY+'-hint')==='off';}catch(e){}
@@ -456,7 +468,7 @@ let lt=null;function relayout(){if(lt)cancelAnimationFrame(lt);lt=requestAnimati
 window.addEventListener('resize',relayout);window.addEventListener('orientationchange',()=>setTimeout(layout,250));
 selChip();layout();
 if('serviceWorker' in navigator&&location.protocol==='https:'){try{let swReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(swReloaded||bets.size||spinning)return;swReloaded=true;location.reload();});navigator.serviceWorker.register('./sw.js').then(r=>{try{r.update();}catch(e){}}).catch(()=>{});}catch(e){}}
-if(!HAS_RUNTIME&&location.protocol==='https:'){setTimeout(()=>{fetch('./version.txt',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();if(v&&v!==VERSION&&!bets.size&&!spinning){let k='';try{k=sessionStorage.getItem(KEY+'-upd')||'';}catch(e){}if(k!==v){try{sessionStorage.setItem(KEY+'-upd',v);}catch(e){}location.reload();}else{msg('Build '+v+' is ready. Close the app fully and reopen it to get it.','');}}}).catch(()=>{});},1500);}
+if(!HAS_RUNTIME&&location.protocol==='https:'&&typeof fetch==='function'){setTimeout(()=>{fetch('./version.txt',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();if(v&&v!==VERSION&&!bets.size&&!spinning){let k='';try{k=sessionStorage.getItem(KEY+'-upd')||'';}catch(e){}if(k!==v){try{sessionStorage.setItem(KEY+'-upd',v);}catch(e){}location.reload();}else{msg('Build '+v+' is ready. Close the app fully and reopen it to get it.','');}}}).catch(()=>{});},1500);}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 </script>
 </body>
