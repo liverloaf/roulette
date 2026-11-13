@@ -44,7 +44,7 @@ button{font:inherit;cursor:pointer}
 .stat{display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex:none}
 .stat .l{font-size:clamp(9.5px,1.35vw,11px);color:var(--muted)}
 .stat .v{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
-#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#oddsv{min-width:1.9em}#net{min-width:1.6em}#lastv{min-width:.9em}#avgv{min-width:1.6em}
+#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#oddsv{min-width:1.9em}#net{min-width:1.6em}#lastv{min-width:.9em}
 .dgrp{display:flex;align-items:baseline;gap:clamp(8px,1.8vw,14px);flex:none;white-space:nowrap}
 @media (max-width:760px){.fw2{display:none}}
 .statbtn{background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
@@ -167,7 +167,7 @@ canvas{display:block}
     <div class="stat"><span class="l">Net</span><span class="v" id="net">0</span></div>
     <div class="stat"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
     <div class="stat"><span class="l">Drought</span><span class="v" id="streak">0</span></div>
-    <button class="statbtn dgrp" id="streakbtn" aria-haspopup="dialog" title="Open the drought page"><span class="stat"><span class="l">Odds</span><span class="v" id="oddsv">–</span></span><span class="stat"><span class="l">Last</span><span class="v" id="lastv">–</span></span><span class="stat"><span class="l">Avg</span><span class="v" id="avgv">–</span></span><span class="chev" aria-hidden="true">›</span></button>
+    <button class="statbtn dgrp" id="streakbtn" aria-haspopup="dialog" title="Open the drought page"><span class="stat"><span class="l">Odds</span><span class="v" id="oddsv">–</span></span><span class="stat"><span class="l">Last</span><span class="v" id="lastv">–</span></span><span class="chev" aria-hidden="true">›</span></button>
     <span class="badges"><button class="fair" id="optbtn" aria-haspopup="dialog" title="Game options"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="#14301a"/><circle cx="15" cy="12" r="2.2" fill="#14301a"/><circle cx="8" cy="17" r="2.2" fill="#14301a"/></svg><span class="fw2">Options</span></button><button class="fair" id="fairbtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span class="fw">Fair <span class="fw2">wheel</span></span></button></span>
   </header>
   <div id="main">
@@ -250,7 +250,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='37';
+const VERSION='38';
 const DEN=[1,5,10,25,50,100];
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
@@ -343,7 +343,7 @@ bets.forEach(b=>{tot+=b.amount;const d=document.createElement('div');d.className
 if(outEl[b.key]){d.style.left='50%';d.style.top='50%';outEl[b.key].appendChild(d);}else{const p=posFor(b.key);if(!p)return;d.style.left=p[0]+'px';d.style.top=p[1]+'px';grid.appendChild(d);}});
 $('bal').textContent=state.balance.toLocaleString();$('bet').textContent=tot.toLocaleString();
 let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;}$('streak').textContent=s;$('spins').textContent=state.hist.length.toLocaleString();
-{let on=0;bets.forEach(b=>on+=b.amount);const nt=state.balance+on-state.put,ne=$('net');ne.textContent=(nt>0?'+':nt<0?'−':'')+Math.abs(nt).toLocaleString();ne.style.color=nt>0?'var(--win)':nt<0?'var(--lose)':'';}const ds=dryStats();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';$('avgv').textContent=ds.runs.length?(ds.runs.reduce((a,r)=>a+r,0)/ds.runs.length).toFixed(1):'–';
+{let on=0;bets.forEach(b=>on+=b.amount);const nt=state.balance+on-state.put,ne=$('net');ne.textContent=(nt>0?'+':nt<0?'−':'')+Math.abs(nt).toLocaleString();ne.style.color=nt>0?'var(--win)':nt<0?'var(--lose)':'';}const ds=dryStats();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';
 $('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
 for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
 ['undo','clear','dbl','plus1','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
