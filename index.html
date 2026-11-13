@@ -59,6 +59,8 @@ button{font:inherit;cursor:pointer}
 .sh{font-family:var(--display);font-weight:500;font-size:15px;margin:12px 0 4px}
 .dlist{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 8px}
 .dlist span{min-width:26px;text-align:center;padding:3px 6px;border:1px solid var(--line);border-radius:7px;font-variant-numeric:tabular-nums;font-size:12px}
+.dlist button{min-width:44px;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-variant-numeric:tabular-nums}
+.dlist button.on{border-color:var(--gold);color:var(--gold);font-weight:600;background:rgba(212,175,55,.12)}
 .dlist span.now{border-color:var(--gold);color:var(--gold);font-weight:600}
 .odds{flex:1;min-width:0;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .odds b{color:var(--gold);font-weight:600}
@@ -214,6 +216,9 @@ canvas{display:block}
     <p><b>Starting bank.</b> What a new game starts with, and what Reload adds to your balance.</p>
     <div class="frow" style="justify-content:flex-start;align-items:center;gap:8px;margin:0 0 12px;flex-wrap:wrap"><span style="font-size:15px;color:var(--cream)">$</span><input id="bankin" type="number" inputmode="numeric" min="1" step="1" style="width:120px;font:inherit;font-size:15px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(241,239,232,.08);color:var(--cream)"><button class="ghost" id="banksave">Save</button><span id="banknote" style="font-size:12px;color:var(--muted)"></span></div>
     <div class="small"><button class="ghost" id="reload">Reload bank</button><button class="ghost" id="reset">New game</button><button class="ghost" id="backupbtn">Back up game</button><button class="ghost" id="importbtn">Restore a backup</button></div>
+    <p style="margin-top:10px"><b>Chip amounts.</b> Tap to turn a chip on or off. Up to 6 show on the table. <span id="chipnote" style="color:var(--muted)"></span></p>
+    <div class="dlist" id="chipopts"></div>
+    <div class="small" style="margin-bottom:6px"><button class="ghost" id="chipdef">Back to default chips</button><button class="ghost" id="hapbtn">Vibration: On</button></div>
     <p style="margin-top:10px"><b>Spin log.</b> Every spin is saved with its number, time, bet and win or loss. <span id="lognote"></span></p>
     <div class="small"><button class="ghost" id="logbtn">Export spin log</button></div>
     <div id="backupbox" hidden><p id="backupnote"></p><textarea id="backuptxt" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" style="width:100%;box-sizing:border-box;font-family:var(--body);font-size:11px;background:rgba(241,239,232,.08);color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:6px"></textarea><div class="frow" style="justify-content:flex-start;margin:6px 0 10px;flex-wrap:wrap"><button class="ghost" id="copybtn" hidden>Copy</button><button class="ghost" id="selbtn" hidden>Select all</button><button class="ghost" id="applybtn" hidden>Restore from this text</button><button class="ghost" id="backupclose">Done</button></div></div>
@@ -243,18 +248,19 @@ const WHEEL=[0,28,9,26,30,11,7,20,32,17,5,22,34,15,3,24,36,13,1,'00',27,10,25,29
 const isG=n=>n===0||n==='00';
 const colorOf=n=>isG(n)?'#3a7a24':reds.includes(n)?'#a8302c':'#262624';
 const nameOf=n=>isG(n)?'green':reds.includes(n)?'red':'black';
-const chipColor=a=>a<5?'#c9c6ba':a<10?'#a1431f':a<25?'#1f63a8':a<50?'#a8302c':a<100?'#117a5c':a<500?'#262624':'#5a4fb8';
+const chipColor=a=>a<2?'#c9c6ba':a<3?'#e6c9d6':a<5?'#c5d8e8':a<10?'#a1431f':a<25?'#1f63a8':a<50?'#a8302c':a<100?'#117a5c':a<500?'#262624':a<1000?'#5a4fb8':'#a8780f';
 const fmt=a=>a>=1000?(a/1000).toFixed(a%1000?1:0)+'k':String(a);
 const $=id=>document.getElementById(id);
 const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='38';
-const DEN=[1,5,10,25,50,100];
+const VERSION='39';
+const CHIPSET=[1,2,3,5,10,25,50,100,500,1000],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
+function normChips(a){if(!Array.isArray(a))return DEN0.slice();const o=CHIPSET.filter(v=>a.includes(v));return o.length>=1&&o.length<=6?o:DEN0.slice();}
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
-function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:100,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=100;if(!DEN.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;if(!out.opts||typeof out.opts!=='object'||Array.isArray(out.opts))out.opts={};out.opts.bank=Math.max(1,Math.min(1e9,Math.floor(+out.opts.bank||100)));if(typeof out.put!=='number'||!isFinite(out.put))out.put=out.balance+out.table.reduce((a,b)=>a+(+b.amount||0),0);return out;}
+function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:100,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=100;if(!CHIPSET.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;if(!out.opts||typeof out.opts!=='object'||Array.isArray(out.opts))out.opts={};out.opts.bank=Math.max(1,Math.min(1e9,Math.floor(+out.opts.bank||100)));out.opts.chips=normChips(out.opts.chips);out.opts.haptic=out.opts.haptic!==false;if(typeof out.put!=='number'||!isFinite(out.put))out.put=out.balance+out.table.reduce((a,b)=>a+(+b.amount||0),0);return out;}
 function contentSig(s){const n=normState(s);return JSON.stringify({b:n.balance,h:n.hist,k:n.hits,l:n.lastBets,c:n.chip,s:n.saved,g:n.gen,t:n.table,q:n.stack,r:!!n.restored,o:n.opts,p:n.put});}
 let state=normState({});
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s.balance==='number'&&Array.isArray(s.hist))state=normState(s);}catch(e){}
@@ -376,8 +382,10 @@ function repeat(){if(spinning||!state.lastBets||!state.lastBets.length)return;co
 function plusOne(){if(spinning)return;if(!bets.size){msg('Nothing on the table to add to.','bad');return;}const unit=state.chip,tot=unit*bets.size;if(tot>state.balance){msg(`Not enough chips to add ${unit} to each of ${bets.size} spot${bets.size===1?'':'s'}.`,'bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:unit});b.amount+=unit;});state.balance-=tot;render();}
 function dbl(){if(spinning)return;const tot=[...bets.values()].reduce((s,b)=>s+b.amount,0);if(!tot){msg('Nothing on the table to double.','bad');return;}if(tot>state.balance){msg('Not enough chips to double.','bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:b.amount});b.amount*=2;});state.balance-=tot;render();}
 const rack=$('chips');
-DEN.forEach(v=>{const b=document.createElement('button');b.className='cs';b.textContent=v;b.style.background=chipColor(v);b.style.color=v<5?'#262624':'#fff';b.setAttribute('aria-label',v+' chip');b.addEventListener('click',()=>{state.chip=v;selChip();save();});rack.appendChild(b);});
-function selChip(){[...rack.children].forEach((b,i)=>b.classList.toggle('sel',DEN[i]===state.chip));}
+function buildRack(){DEN=normChips(state.opts&&state.opts.chips);rack.innerHTML='';DEN.forEach(v=>{const b=document.createElement('button');b.className='cs';b.textContent=v>=1000?(v/1000)+'K':v;b.style.background=chipColor(v);b.style.color=v<5?'#262624':'#fff';b.setAttribute('aria-label',v+' chip');b.addEventListener('click',()=>{state.chip=v;selChip();save();});rack.appendChild(b);});}
+function selChip(){const want=normChips(state.opts&&state.opts.chips);if(rack.children.length!==want.length||want.some((v,i)=>v!==DEN[i]))buildRack();if(!DEN.includes(state.chip)){const lower=DEN.filter(v=>v<=state.chip);state.chip=lower.length?lower[lower.length-1]:DEN[0];}[...rack.children].forEach((b,i)=>b.classList.toggle('sel',DEN[i]===state.chip));}
+function haptic(){try{if(!state.opts||state.opts.haptic===false)return;if(navigator.vibrate){navigator.vibrate(12);return;}const l=document.createElement('label');l.setAttribute('aria-hidden','true');l.style.display='none';const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');l.appendChild(i);document.head.appendChild(l);l.click();document.head.removeChild(l);}catch(e){}}
+document.addEventListener('click',e=>{const t=e.target;if(!t||!t.closest)return;if(t.closest('button')||t.closest('#grid'))haptic();},true);
 function draw(){const k=R/115,Wd=R*2;ctx.clearRect(0,0,Wd,Wd);ctx.save();ctx.translate(R,R);ctx.beginPath();ctx.arc(0,0,R-1,0,2*Math.PI);ctx.fillStyle='#4a1b0c';ctx.fill();ctx.save();ctx.rotate(wAng);
 WHEEL.forEach((n,i)=>{const s=-Math.PI/2+i*A-A/2;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R-15*k,s,s+A);ctx.closePath();ctx.fillStyle=colorOf(n);ctx.fill();ctx.strokeStyle='#d9d6ca';ctx.lineWidth=.8;ctx.stroke();ctx.save();ctx.rotate(s+A/2);ctx.translate(R-26*k,0);ctx.rotate(Math.PI/2);ctx.fillStyle='#fff';ctx.font=`500 ${Math.max(8,Math.round(11*k))}px Oswald, "Arial Narrow", sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(n),0,0);ctx.restore();});
 ctx.beginPath();ctx.arc(0,0,R-46*k,0,2*Math.PI);ctx.fillStyle='#262624';ctx.fill();ctx.beginPath();ctx.arc(0,0,R-50*k,0,2*Math.PI);ctx.fillStyle='#5f5e5a';ctx.fill();ctx.beginPath();ctx.arc(0,0,14*k,0,2*Math.PI);ctx.fillStyle='#f3c168';ctx.fill();ctx.restore();
@@ -466,7 +474,10 @@ $('fairpanel').addEventListener('click',e=>{if(e.target===$('fairpanel'))$('fair
 $('undo').addEventListener('click',undo);$('clear').addEventListener('click',clearAll);$('rep').addEventListener('click',repeat);$('dbl').addEventListener('click',dbl);$('plus1').addEventListener('click',plusOne);$('spin').addEventListener('click',spin);
 $('reload').addEventListener('click',()=>{if(spinning)return;const bank=state.opts.bank;state.balance+=bank;state.put+=bank;msg(`Added $${bank.toLocaleString()} to your balance.`,'');render();});
 function bankLabels(){const b=state.opts.bank.toLocaleString();$('reload').textContent=`Reload bank (+$${b})`;if(!armed)$('reset').textContent=`New game ($${b})`;}
-function openOptions(){$('bankin').value=state.opts.bank;$('banknote').textContent='';$('backupbox').hidden=true;bankLabels();logLabel();$('optpanel').hidden=false;}
+function openOptions(){$('bankin').value=state.opts.bank;$('banknote').textContent='';$('backupbox').hidden=true;bankLabels();logLabel();$('chipnote').textContent='';chipOpts();$('optpanel').hidden=false;}
+function chipOpts(){const cur=normChips(state.opts.chips),box=$('chipopts');box.innerHTML='';CHIPSET.forEach(v=>{const b=document.createElement('button');b.textContent='$'+v.toLocaleString();b.className=cur.includes(v)?'on':'';b.setAttribute('aria-pressed',cur.includes(v));b.addEventListener('click',()=>{if(spinning)return;let c=normChips(state.opts.chips);if(c.includes(v)){if(c.length===1){$('chipnote').textContent='Keep at least one chip.';return;}c=c.filter(x=>x!==v);}else{if(c.length>=6){$('chipnote').textContent='6 is the most that fit. Turn one off first.';return;}c.push(v);}state.opts.chips=normChips(c);$('chipnote').textContent='';selChip();chipOpts();render();});box.appendChild(b);});$('hapbtn').textContent='Vibration: '+(state.opts.haptic===false?'Off':'On');}
+$('chipdef').addEventListener('click',()=>{if(spinning)return;state.opts.chips=DEN0.slice();$('chipnote').textContent='';selChip();chipOpts();render();});
+$('hapbtn').addEventListener('click',()=>{state.opts.haptic=state.opts.haptic===false;chipOpts();render();haptic();});
 $('optbtn').addEventListener('click',openOptions);setTimeout(()=>{try{let has=null;try{has=localStorage.getItem(LOGKEY);}catch(e){}if(has===null&&state.hist.length){logLoad(false);logSave();}}catch(e){}},1500);$('optclose').addEventListener('click',()=>{$('optpanel').hidden=true;});$('optpanel').addEventListener('click',e=>{if(e.target===$('optpanel'))$('optpanel').hidden=true;});
 $('banksave').addEventListener('click',()=>{const v=Math.floor(+$('bankin').value);if(!(v>=1)){$('banknote').textContent='Enter a whole number, 1 or more.';return;}state.opts.bank=Math.min(1e9,v);$('bankin').value=state.opts.bank;bankLabels();render();$('banknote').textContent=`Saved. New games start with $${state.opts.bank.toLocaleString()}.`;});
 let armed=false,armT=null;
