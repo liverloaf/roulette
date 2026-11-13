@@ -44,7 +44,7 @@ button{font:inherit;cursor:pointer}
 .stat{display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex:none}
 .stat .l{font-size:clamp(9.5px,1.35vw,11px);color:var(--muted)}
 .stat .v{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
-#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#oddsv{min-width:1.9em}#lastv{min-width:.9em}#avgv{min-width:1.6em}
+#bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#oddsv{min-width:1.9em}#net{min-width:1.6em}#lastv{min-width:.9em}#avgv{min-width:1.6em}
 .dgrp{display:flex;align-items:baseline;gap:clamp(8px,1.8vw,14px);flex:none;white-space:nowrap}
 @media (max-width:760px){.fw2{display:none}}
 .statbtn{background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
@@ -164,6 +164,7 @@ canvas{display:block}
 <div id="app">
   <header id="top">
     <div class="stat"><span class="l">$ Balance</span><span class="v" id="bal">100</span></div>
+    <div class="stat"><span class="l">Net</span><span class="v" id="net">0</span></div>
     <div class="stat"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
     <div class="stat"><span class="l">Drought</span><span class="v" id="streak">0</span></div>
     <button class="statbtn dgrp" id="streakbtn" aria-haspopup="dialog" title="Open the drought page"><span class="stat"><span class="l">Odds</span><span class="v" id="oddsv">–</span></span><span class="stat"><span class="l">Last</span><span class="v" id="lastv">–</span></span><span class="stat"><span class="l">Avg</span><span class="v" id="avgv">–</span></span><span class="chev" aria-hidden="true">›</span></button>
@@ -249,12 +250,12 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='36';
+const VERSION='37';
 const DEN=[1,5,10,25,50,100];
-const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts'];
+const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
-function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:100,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=100;if(!DEN.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;if(!out.opts||typeof out.opts!=='object'||Array.isArray(out.opts))out.opts={};out.opts.bank=Math.max(1,Math.min(1e9,Math.floor(+out.opts.bank||100)));return out;}
-function contentSig(s){const n=normState(s);return JSON.stringify({b:n.balance,h:n.hist,k:n.hits,l:n.lastBets,c:n.chip,s:n.saved,g:n.gen,t:n.table,q:n.stack,r:!!n.restored,o:n.opts});}
+function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:100,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=100;if(!DEN.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;if(!out.opts||typeof out.opts!=='object'||Array.isArray(out.opts))out.opts={};out.opts.bank=Math.max(1,Math.min(1e9,Math.floor(+out.opts.bank||100)));if(typeof out.put!=='number'||!isFinite(out.put))out.put=out.balance+out.table.reduce((a,b)=>a+(+b.amount||0),0);return out;}
+function contentSig(s){const n=normState(s);return JSON.stringify({b:n.balance,h:n.hist,k:n.hits,l:n.lastBets,c:n.chip,s:n.saved,g:n.gen,t:n.table,q:n.stack,r:!!n.restored,o:n.opts,p:n.put});}
 let state=normState({});
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s.balance==='number'&&Array.isArray(s.hist))state=normState(s);}catch(e){}
 let bets=new Map(),stack=[],spinning=false,wAng=0,bAng=-Math.PI/2,bR=80,R=80;
@@ -342,7 +343,7 @@ bets.forEach(b=>{tot+=b.amount;const d=document.createElement('div');d.className
 if(outEl[b.key]){d.style.left='50%';d.style.top='50%';outEl[b.key].appendChild(d);}else{const p=posFor(b.key);if(!p)return;d.style.left=p[0]+'px';d.style.top=p[1]+'px';grid.appendChild(d);}});
 $('bal').textContent=state.balance.toLocaleString();$('bet').textContent=tot.toLocaleString();
 let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;}$('streak').textContent=s;$('spins').textContent=state.hist.length.toLocaleString();
-const ds=dryStats();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';$('avgv').textContent=ds.runs.length?(ds.runs.reduce((a,r)=>a+r,0)/ds.runs.length).toFixed(1):'–';
+{let on=0;bets.forEach(b=>on+=b.amount);const nt=state.balance+on-state.put,ne=$('net');ne.textContent=(nt>0?'+':nt<0?'−':'')+Math.abs(nt).toLocaleString();ne.style.color=nt>0?'var(--win)':nt<0?'var(--lose)':'';}const ds=dryStats();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';$('avgv').textContent=ds.runs.length?(ds.runs.reduce((a,r)=>a+r,0)/ds.runs.length).toFixed(1):'–';
 $('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
 for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
 ['undo','clear','dbl','plus1','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
@@ -463,14 +464,14 @@ $('applybtn').addEventListener('click',()=>{if(spinning)return;const raw=$('back
 $('fairclose').addEventListener('click',()=>{$('fairpanel').hidden=true;});
 $('fairpanel').addEventListener('click',e=>{if(e.target===$('fairpanel'))$('fairpanel').hidden=true;});
 $('undo').addEventListener('click',undo);$('clear').addEventListener('click',clearAll);$('rep').addEventListener('click',repeat);$('dbl').addEventListener('click',dbl);$('plus1').addEventListener('click',plusOne);$('spin').addEventListener('click',spin);
-$('reload').addEventListener('click',()=>{if(spinning)return;const bank=state.opts.bank;state.balance+=bank;msg(`Added $${bank.toLocaleString()} to your balance.`,'');render();});
+$('reload').addEventListener('click',()=>{if(spinning)return;const bank=state.opts.bank;state.balance+=bank;state.put+=bank;msg(`Added $${bank.toLocaleString()} to your balance.`,'');render();});
 function bankLabels(){const b=state.opts.bank.toLocaleString();$('reload').textContent=`Reload bank (+$${b})`;if(!armed)$('reset').textContent=`New game ($${b})`;}
 function openOptions(){$('bankin').value=state.opts.bank;$('banknote').textContent='';$('backupbox').hidden=true;bankLabels();logLabel();$('optpanel').hidden=false;}
 $('optbtn').addEventListener('click',openOptions);setTimeout(()=>{try{let has=null;try{has=localStorage.getItem(LOGKEY);}catch(e){}if(has===null&&state.hist.length){logLoad(false);logSave();}}catch(e){}},1500);$('optclose').addEventListener('click',()=>{$('optpanel').hidden=true;});$('optpanel').addEventListener('click',e=>{if(e.target===$('optpanel'))$('optpanel').hidden=true;});
 $('banksave').addEventListener('click',()=>{const v=Math.floor(+$('bankin').value);if(!(v>=1)){$('banknote').textContent='Enter a whole number, 1 or more.';return;}state.opts.bank=Math.min(1e9,v);$('bankin').value=state.opts.bank;bankLabels();render();$('banknote').textContent=`Saved. New games start with $${state.opts.bank.toLocaleString()}.`;});
 let armed=false,armT=null;
 $('reset').addEventListener('click',()=>{if(spinning)return;if(!armed){armed=true;$('reset').textContent='Tap again to start a new game';armT=setTimeout(()=>{armed=false;bankLabels();},3000);return;}
-clearTimeout(armT);armed=false;bets.clear();stack=[];if(mode)setMode('');clearDolly();const bank=state.opts.bank;state=normState({balance:bank,chip:state.chip,saved:state.saved,gen:(state.gen||0)+1,restored:state.restored,opts:state.opts});hydrateTable();bankLabels();$('res').innerHTML='';msg(`New game. $${bank.toLocaleString()} to start. Saved bets kept.`,'');selChip();render();$('optpanel').hidden=true;});
+clearTimeout(armT);armed=false;bets.clear();stack=[];if(mode)setMode('');clearDolly();const bank=state.opts.bank;state=normState({balance:bank,put:bank,chip:state.chip,saved:state.saved,gen:(state.gen||0)+1,restored:state.restored,opts:state.opts});hydrateTable();bankLabels();$('res').innerHTML='';msg(`New game. $${bank.toLocaleString()} to start. Saved bets kept.`,'');selChip();render();$('optpanel').hidden=true;});
 const standalone=window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
 const iOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let hintOff=false;try{hintOff=localStorage.getItem(KEY+'-hint')==='off';}catch(e){}
