@@ -59,6 +59,7 @@ button{font:inherit;cursor:pointer}
 .sh{font-family:var(--display);font-weight:500;font-size:15px;margin:12px 0 4px}
 .dlist{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 8px}
 .dlist span{min-width:26px;text-align:center;padding:3px 6px;border:1px solid var(--line);border-radius:7px;font-variant-numeric:tabular-nums;font-size:12px}
+#hx{position:fixed;inset:0;z-index:40;display:none;background:transparent;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .dlist button{min-width:44px;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-variant-numeric:tabular-nums}
 .dlist button.on{border-color:var(--gold);color:var(--gold);font-weight:600;background:rgba(212,175,55,.12)}
 .dlist span.now{border-color:var(--gold);color:var(--gold);font-weight:600}
@@ -255,7 +256,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='39';
+const VERSION='40';
 const CHIPSET=[1,2,3,5,10,25,50,100,500,1000],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 function normChips(a){if(!Array.isArray(a))return DEN0.slice();const o=CHIPSET.filter(v=>a.includes(v));return o.length>=1&&o.length<=6?o:DEN0.slice();}
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put'];
@@ -383,9 +384,15 @@ function plusOne(){if(spinning)return;if(!bets.size){msg('Nothing on the table t
 function dbl(){if(spinning)return;const tot=[...bets.values()].reduce((s,b)=>s+b.amount,0);if(!tot){msg('Nothing on the table to double.','bad');return;}if(tot>state.balance){msg('Not enough chips to double.','bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:b.amount});b.amount*=2;});state.balance-=tot;render();}
 const rack=$('chips');
 function buildRack(){DEN=normChips(state.opts&&state.opts.chips);rack.innerHTML='';DEN.forEach(v=>{const b=document.createElement('button');b.className='cs';b.textContent=v>=1000?(v/1000)+'K':v;b.style.background=chipColor(v);b.style.color=v<5?'#262624':'#fff';b.setAttribute('aria-label',v+' chip');b.addEventListener('click',()=>{state.chip=v;selChip();save();});rack.appendChild(b);});}
-function selChip(){const want=normChips(state.opts&&state.opts.chips);if(rack.children.length!==want.length||want.some((v,i)=>v!==DEN[i]))buildRack();if(!DEN.includes(state.chip)){const lower=DEN.filter(v=>v<=state.chip);state.chip=lower.length?lower[lower.length-1]:DEN[0];}[...rack.children].forEach((b,i)=>b.classList.toggle('sel',DEN[i]===state.chip));}
-function haptic(){try{if(!state.opts||state.opts.haptic===false)return;if(navigator.vibrate){navigator.vibrate(12);return;}const l=document.createElement('label');l.setAttribute('aria-hidden','true');l.style.display='none';const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');l.appendChild(i);document.head.appendChild(l);l.click();document.head.removeChild(l);}catch(e){}}
-document.addEventListener('click',e=>{const t=e.target;if(!t||!t.closest)return;if(t.closest('button')||t.closest('#grid'))haptic();},true);
+function selChip(){const want=normChips(state.opts&&state.opts.chips);if(rack.children.length!==want.length||want.some((v,i)=>v!==DEN[i]))buildRack();if(!DEN.includes(state.chip)){const lower=DEN.filter(v=>v<=state.chip);state.chip=lower.length?lower[lower.length-1]:DEN[0];}[...rack.children].forEach((b,i)=>b.classList.toggle('sel',DEN[i]===state.chip));if(typeof hxSync==='function')hxSync();}
+function haptic(){try{if(!state.opts||state.opts.haptic===false)return;if(navigator.vibrate)navigator.vibrate(12);}catch(e){}}
+document.addEventListener('click',e=>{const t=e.target;if(!navigator.vibrate||!t||!t.closest)return;if(t.closest('button')||t.closest('#grid'))haptic();},true);
+/* iPhone: since iOS 26.5 only a real finger tap on a label wired to a native switch plays the tick. A clear label covers the game screen, takes the tap, and passes the click to whatever is under it. */
+const HX_ON=/[?&]hx=1/.test(location.search)||(!navigator.vibrate&&('ontouchstart' in window));let hx=null;
+function hxSync(){if(!hx)return;const open=['fairpanel','streakpanel','optpanel'].some(id=>!$(id).hidden);hx.style.display=(state.opts&&state.opts.haptic!==false&&!open)?'block':'none';}
+function hxSetup(){if(!HX_ON)return;try{hx=document.createElement('label');hx.id='hx';hx.setAttribute('aria-hidden','true');const sw=document.createElement('input');sw.type='checkbox';sw.setAttribute('switch','');sw.tabIndex=-1;sw.style.cssText='position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none';hx.appendChild(sw);sw.addEventListener('click',e=>e.stopPropagation());
+hx.addEventListener('click',e=>{if(e.target!==hx)return;let tick=false;try{hx.style.pointerEvents='none';const t=document.elementFromPoint(e.clientX,e.clientY);hx.style.pointerEvents='';if(t&&t.closest){const b=t.closest('button');if(b){if(!b.disabled){tick=true;b.click();}}else{tick=!!t.closest('#grid');t.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,clientX:e.clientX,clientY:e.clientY}));}}}catch(err){hx.style.pointerEvents='';hx.style.display='none';}if(!tick)e.preventDefault();hxSync();});
+document.body.appendChild(hx);['fairpanel','streakpanel','optpanel'].forEach(id=>new MutationObserver(hxSync).observe($(id),{attributes:true,attributeFilter:['hidden']}));hxSync();}catch(err){hx=null;}}
 function draw(){const k=R/115,Wd=R*2;ctx.clearRect(0,0,Wd,Wd);ctx.save();ctx.translate(R,R);ctx.beginPath();ctx.arc(0,0,R-1,0,2*Math.PI);ctx.fillStyle='#4a1b0c';ctx.fill();ctx.save();ctx.rotate(wAng);
 WHEEL.forEach((n,i)=>{const s=-Math.PI/2+i*A-A/2;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R-15*k,s,s+A);ctx.closePath();ctx.fillStyle=colorOf(n);ctx.fill();ctx.strokeStyle='#d9d6ca';ctx.lineWidth=.8;ctx.stroke();ctx.save();ctx.rotate(s+A/2);ctx.translate(R-26*k,0);ctx.rotate(Math.PI/2);ctx.fillStyle='#fff';ctx.font=`500 ${Math.max(8,Math.round(11*k))}px Oswald, "Arial Narrow", sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(n),0,0);ctx.restore();});
 ctx.beginPath();ctx.arc(0,0,R-46*k,0,2*Math.PI);ctx.fillStyle='#262624';ctx.fill();ctx.beginPath();ctx.arc(0,0,R-50*k,0,2*Math.PI);ctx.fillStyle='#5f5e5a';ctx.fill();ctx.beginPath();ctx.arc(0,0,14*k,0,2*Math.PI);ctx.fillStyle='#f3c168';ctx.fill();ctx.restore();
@@ -477,7 +484,7 @@ function bankLabels(){const b=state.opts.bank.toLocaleString();$('reload').textC
 function openOptions(){$('bankin').value=state.opts.bank;$('banknote').textContent='';$('backupbox').hidden=true;bankLabels();logLabel();$('chipnote').textContent='';chipOpts();$('optpanel').hidden=false;}
 function chipOpts(){const cur=normChips(state.opts.chips),box=$('chipopts');box.innerHTML='';CHIPSET.forEach(v=>{const b=document.createElement('button');b.textContent='$'+v.toLocaleString();b.className=cur.includes(v)?'on':'';b.setAttribute('aria-pressed',cur.includes(v));b.addEventListener('click',()=>{if(spinning)return;let c=normChips(state.opts.chips);if(c.includes(v)){if(c.length===1){$('chipnote').textContent='Keep at least one chip.';return;}c=c.filter(x=>x!==v);}else{if(c.length>=6){$('chipnote').textContent='6 is the most that fit. Turn one off first.';return;}c.push(v);}state.opts.chips=normChips(c);$('chipnote').textContent='';selChip();chipOpts();render();});box.appendChild(b);});$('hapbtn').textContent='Vibration: '+(state.opts.haptic===false?'Off':'On');}
 $('chipdef').addEventListener('click',()=>{if(spinning)return;state.opts.chips=DEN0.slice();$('chipnote').textContent='';selChip();chipOpts();render();});
-$('hapbtn').addEventListener('click',()=>{state.opts.haptic=state.opts.haptic===false;chipOpts();render();haptic();});
+$('hapbtn').addEventListener('click',()=>{state.opts.haptic=state.opts.haptic===false;chipOpts();render();haptic();hxSync();});
 $('optbtn').addEventListener('click',openOptions);setTimeout(()=>{try{let has=null;try{has=localStorage.getItem(LOGKEY);}catch(e){}if(has===null&&state.hist.length){logLoad(false);logSave();}}catch(e){}},1500);$('optclose').addEventListener('click',()=>{$('optpanel').hidden=true;});$('optpanel').addEventListener('click',e=>{if(e.target===$('optpanel'))$('optpanel').hidden=true;});
 $('banksave').addEventListener('click',()=>{const v=Math.floor(+$('bankin').value);if(!(v>=1)){$('banknote').textContent='Enter a whole number, 1 or more.';return;}state.opts.bank=Math.min(1e9,v);$('bankin').value=state.opts.bank;bankLabels();render();$('banknote').textContent=`Saved. New games start with $${state.opts.bank.toLocaleString()}.`;});
 let armed=false,armT=null;
@@ -499,7 +506,7 @@ document.addEventListener('fullscreenchange',()=>{fsLabel();relayout();});docume
 fsLabel();
 let lt=null;function relayout(){if(lt)cancelAnimationFrame(lt);lt=requestAnimationFrame(()=>{lt=null;layout();});}
 window.addEventListener('resize',relayout);window.addEventListener('orientationchange',()=>setTimeout(layout,250));
-selChip();layout();
+selChip();layout();hxSetup();
 if('serviceWorker' in navigator&&location.protocol==='https:'){try{let swReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(swReloaded||bets.size||spinning)return;swReloaded=true;location.reload();});navigator.serviceWorker.register('./sw.js').then(r=>{try{r.update();}catch(e){}}).catch(()=>{});}catch(e){}}
 if(!HAS_RUNTIME&&location.protocol==='https:'&&typeof fetch==='function'){setTimeout(()=>{fetch('./version.txt',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();if(v&&v!==VERSION&&!bets.size&&!spinning){let k='';try{k=sessionStorage.getItem(KEY+'-upd')||'';}catch(e){}if(k!==v){try{sessionStorage.setItem(KEY+'-upd',v);}catch(e){}location.reload();}else{msg('Build '+v+' is ready. Close the app fully and reopen it to get it.','');}}}).catch(()=>{});},1500);}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
