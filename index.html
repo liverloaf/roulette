@@ -106,8 +106,9 @@ canvas{display:block}
 .slot{flex:1;min-width:0;height:40px;border-radius:8px;border:1px dashed rgba(241,239,232,.45);background:transparent;color:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0 3px}
 .slot.filled{border-style:solid;background:rgba(241,239,232,.08)}
 .slot.arm{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
-.slot .sn{font-family:var(--display);font-size:14px;line-height:1}
-.slot .sd{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.1}
+.slot .sn{font-family:var(--display);font-size:14px;line-height:1;white-space:nowrap;overflow:hidden;max-width:100%}
+.slot .sa{font-family:var(--body);font-size:.72em;color:var(--gold);margin-left:4px;font-variant-numeric:tabular-nums}
+.slot .sd{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;max-width:100%;line-height:1.1}
 .slot.filled .sd{color:var(--cream)}
 .slot.hot.filled{border-color:#f0997b;background:rgba(240,153,123,.14)}
 .slot.cold.filled{border-color:#85b7eb;background:rgba(133,183,235,.14)}
@@ -257,7 +258,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='41';
+const VERSION='42';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 function normChips(a){if(!Array.isArray(a))return DEN0.slice();const o=CHIPSET.filter(v=>a.includes(v));return o.length>=1&&o.length<=6?o:DEN0.slice();}
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put'];
@@ -366,8 +367,9 @@ for(let i=0;i<6;i++){const b=document.createElement('button');b.className='slot'
 const ALLKEYS=['0','00',...Array.from({length:36},(_,i)=>String(i+1))];
 function hotCold(){const last={};state.hist.forEach((h,i)=>{last[String(h)]=i;});const cnt=k=>state.hits[k]||0,li=k=>(k in last)?last[k]:-1;const hot=ALLKEYS.slice().sort((a,b)=>(cnt(b)-cnt(a))||(li(b)-li(a)));const cold=ALLKEYS.slice().sort((a,b)=>(cnt(a)-cnt(b))||(li(a)-li(b)));const distinct=ALLKEYS.filter(k=>cnt(k)>0).length,never=ALLKEYS.length-distinct;return{hot:hot.slice(0,7),cold:cold.slice(0,7),hotReady:distinct>=7,coldReady:never<=7,distinct,never};}
 function renderSlots(){const hc=hotCold();[...slotsEl.children].forEach((b,i)=>{
-if(i>=4){const isHot=i===4,ready=isHot?hc.hotReady:hc.coldReady;b.className='slot '+(isHot?'hot':'cold')+(ready?' filled':'');b.disabled=spinning||!ready;b.setAttribute('aria-label',isHot?'Bet the 7 hottest numbers':'Bet the 7 coldest numbers');b.innerHTML=`<span class="sn">${isHot?'Hot':'Cold'}</span><span class="sd">${ready?'7 corners':(isHot?hc.distinct+'/7 hit':hc.never+' not hit')}</span>`;return;}
-const s=state.saved[i];b.className='slot'+(s?' filled':'')+(mode!==''?' arm':'');b.disabled=spinning;b.innerHTML=`<span class="sn">${i+1}</span><span class="sd">${s?money(s.amount)+' on '+s.bets.length:'empty'}</span>`;});}
+if(i>=4){const isHot=i===4,ready=isHot?hc.hotReady:hc.coldReady;b.className='slot '+(isHot?'hot':'cold')+(ready?' filled':'');b.disabled=spinning||!ready;b.setAttribute('aria-label',isHot?'Bet the 7 hottest numbers':'Bet the 7 coldest numbers');b.innerHTML=`<span class="sn">${isHot?'Hot':'Cold'}</span><span class="sd">${ready?'7 corners':(isHot?hc.distinct+'/7 hit':hc.never+' unhit')}</span>`;return;}
+const s=state.saved[i];b.className='slot'+(s?' filled':'')+(mode!==''?' arm':'');b.disabled=spinning;let cov=0;if(s){const u=new Set();s.bets.forEach(x=>(x.nums||[]).forEach(n=>u.add(String(n))));cov=u.size;}b.setAttribute('aria-label',s?`Saved bet ${i+1}: $${money(s.amount)} covering ${cov} numbers`:`Saved bet ${i+1}, empty`);b.innerHTML=s?`<span class="sn">${i+1}<span class="sa">$${money(s.amount)}</span></span><span class="sd">${cov} nums</span>`:`<span class="sn">${i+1}</span><span class="sd">empty</span>`;});fitSlots();}
+function fitSlots(){try{slotsEl.querySelectorAll('.sd,.sn').forEach(e=>{e.style.fontSize='';let f=parseFloat(getComputedStyle(e).fontSize)||10,g=0;while(e.scrollWidth>e.clientWidth+0.5&&f>6.5&&g++<12){f-=0.5;e.style.fontSize=f+'px';}});}catch(e){}}
 function setMode(m){mode=m;$('savebtn').classList.toggle('on',m==='save');$('delbtn').classList.toggle('on',m==='del');if(m==='save')msg('Tap a slot to save what is on the table.','');else if(m==='del')msg('Tap a slot to clear it.','');renderSlots();}
 $('savebtn').addEventListener('click',()=>{if(spinning)return;if(mode==='save'){setMode('');msg('','');return;}if(!bets.size){msg('Nothing on the table to save. Place chips first.','bad');return;}setMode('save');});
 $('delbtn').addEventListener('click',()=>{if(spinning)return;if(mode==='del'){setMode('');msg('','');return;}setMode('del');});
