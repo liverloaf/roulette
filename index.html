@@ -97,8 +97,8 @@ canvas{display:block}
 .rack{display:flex;gap:6px;align-items:center}
 .cs{width:32px;height:32px;border-radius:50%;padding:0;border:2px dashed rgba(255,255,255,.85);color:#fff;font-size:11.5px;font-weight:600;box-shadow:0 2px 3px rgba(0,0,0,.35)}
 .cs.sel{outline:3px solid var(--gold);outline-offset:2px}
-.acts{display:flex;gap:6px;margin-left:auto}
-.acts button{height:36px;min-width:46px;padding:0 7px;border-radius:9px;border:1px solid rgba(241,239,232,.45);background:transparent;color:var(--cream);font-size:12.5px;font-weight:600;white-space:nowrap}
+.acts{display:flex;gap:4px;margin-left:auto;min-width:0}
+.acts button{height:36px;min-width:34px;padding:0 5px;flex:0 1 auto;border-radius:9px;border:1px solid rgba(241,239,232,.45);background:transparent;color:var(--cream);font-size:12px;font-weight:600;white-space:nowrap}
 .savedctl{display:flex;flex-direction:column;gap:4px;flex:none}
 .mini{background:transparent;color:var(--cream);border:1px solid rgba(241,239,232,.45);border-radius:6px;padding:0 7px;height:18px;font-size:10.5px;line-height:1;white-space:nowrap}
 .mini.on{background:var(--gold);color:var(--felt-deep);border-color:var(--gold)}
@@ -186,7 +186,7 @@ canvas{display:block}
       <div id="boardwrap"><div id="grid"></div></div>
       <div class="rowA">
         <div class="rack" id="chips" aria-label="Chip rack"></div>
-        <div class="acts"><button id="undo">Undo</button><button id="clear">Clear</button><button id="rep">Repeat</button><button id="dbl">2x</button><button id="plus1">+1</button></div>
+        <div class="acts"><button id="undo">Undo</button><button id="clear">Clear</button><button id="rep">Repeat</button><button id="dbl">2x</button><button id="minus1" aria-label="Take one chip off every spot">−1</button><button id="plus1" aria-label="Add one chip to every spot">+1</button></div>
       </div>
       <div class="rowB">
         <div class="savedctl"><button class="mini" id="savebtn">Save table</button><button class="mini" id="delbtn">Delete</button></div>
@@ -258,7 +258,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='42';
+const VERSION='43';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 function normChips(a){if(!Array.isArray(a))return DEN0.slice();const o=CHIPSET.filter(v=>a.includes(v));return o.length>=1&&o.length<=6?o:DEN0.slice();}
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put'];
@@ -355,7 +355,7 @@ let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;
 {let on=0;bets.forEach(b=>on+=b.amount);const nt=state.balance+on-state.put,ne=$('net');ne.textContent=(nt>0?'+':nt<0?'−':'')+money(Math.abs(nt));ne.style.color=nt>0?'var(--win)':nt<0?'var(--lose)':'';}const ds=dryStats();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';
 $('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
 for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
-['undo','clear','dbl','plus1','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
+['undo','clear','dbl','plus1','minus1','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
 renderSlots();positionDolly();save();}
 let dollyN=null,dollyT=null,dollyT2=null;
 function clearDolly(){clearTimeout(dollyT);clearTimeout(dollyT2);dollyT=dollyT2=null;dollyN=null;const old=grid.querySelector('.dolly');if(old)old.remove();Object.values(cells).forEach(c=>c.classList.remove('win'));}
@@ -383,6 +383,7 @@ s.bets.forEach(b=>{if(!b||!Array.isArray(b.nums)||typeof b.pay!=='number'||!(b.a
 function undo(){if(spinning)return;const p=stack.pop();if(!p)return;const b=bets.get(p.key);if(b){b.amount-=p.amount;state.balance+=p.amount;if(b.amount<=0)bets.delete(p.key);}render();}
 function clearAll(){if(spinning)return;bets.forEach(b=>state.balance+=b.amount);bets.clear();stack=[];render();}
 function repeat(){if(spinning||!state.lastBets||!state.lastBets.length)return;const tot=state.lastBets.reduce((s,b)=>s+b.amount,0);if(tot>state.balance){msg('Not enough chips to repeat that bet.','bad');return;}state.lastBets.forEach(b=>{if(!b||!Array.isArray(b.nums)||typeof b.pay!=='number'||!(b.amount>0))return;const cur=bets.get(b.key)||{key:b.key,nums:b.nums.slice(),pay:b.pay,amount:0};cur.amount+=b.amount;bets.set(b.key,cur);stack.push({key:b.key,amount:b.amount});});state.balance-=tot;render();}
+function minusOne(){if(spinning)return;if(!bets.size){msg('Nothing on the table to take from.','bad');return;}const unit=state.chip;let back=0;[...bets.keys()].forEach(k=>{const b=bets.get(k),d=Math.min(unit,b.amount);b.amount-=d;back+=d;let left=d;for(let i=stack.length-1;i>=0&&left>0;i--){if(stack[i].key!==k)continue;const t=Math.min(left,stack[i].amount);stack[i].amount-=t;left-=t;if(stack[i].amount<=0)stack.splice(i,1);}if(b.amount<=0)bets.delete(k);});state.balance+=back;if(!bets.size)msg('Table cleared.','');render();}
 function plusOne(){if(spinning)return;if(!bets.size){msg('Nothing on the table to add to.','bad');return;}const unit=state.chip,tot=unit*bets.size;if(tot>state.balance){msg(`Not enough chips to add ${money(unit)} to each of ${bets.size} spot${bets.size===1?'':'s'}.`,'bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:unit});b.amount+=unit;});state.balance-=tot;render();}
 function dbl(){if(spinning)return;const tot=[...bets.values()].reduce((s,b)=>s+b.amount,0);if(!tot){msg('Nothing on the table to double.','bad');return;}if(tot>state.balance){msg('Not enough chips to double.','bad');return;}bets.forEach((b,k)=>{stack.push({key:k,amount:b.amount});b.amount*=2;});state.balance-=tot;render();}
 const rack=$('chips');
@@ -481,7 +482,7 @@ $('selbtn').addEventListener('click',()=>{selectAllText($('backuptxt'));$('backu
 $('applybtn').addEventListener('click',()=>{if(spinning)return;const raw=$('backuptxt').value;try{const obj=parseBackup(raw);bets.clear();stack=[];if(mode)setMode('');clearDolly();state=normState(obj);state.rev=(state.rev||0)+1;hydrateTable();lastSig='';selChip();render();$('backupbox').hidden=true;$('res').innerHTML='';msg(`Backup restored: ${money(state.balance)} chips, ${state.hist.length} spins.`,'good');fairText();}catch(e){const s=String(raw||'').replace(/\s/g,''),n=s.length,why=e&&e.message,diag=` Received ${n.toLocaleString()} characters, starting "${s.slice(0,12)}" and ending "${s.slice(-12)}". Screenshot this for Claude.`;$('backupnote').textContent=(why==='prefix'?'That text decoded, but not into a game.':why==='short'?'Only a few characters came through.':'That backup could not be decoded; it looks cut off or altered.')+diag;}});
 $('fairclose').addEventListener('click',()=>{$('fairpanel').hidden=true;});
 $('fairpanel').addEventListener('click',e=>{if(e.target===$('fairpanel'))$('fairpanel').hidden=true;});
-$('undo').addEventListener('click',undo);$('clear').addEventListener('click',clearAll);$('rep').addEventListener('click',repeat);$('dbl').addEventListener('click',dbl);$('plus1').addEventListener('click',plusOne);$('spin').addEventListener('click',spin);
+$('undo').addEventListener('click',undo);$('clear').addEventListener('click',clearAll);$('rep').addEventListener('click',repeat);$('dbl').addEventListener('click',dbl);$('plus1').addEventListener('click',plusOne);$('minus1').addEventListener('click',minusOne);$('spin').addEventListener('click',spin);
 $('reload').addEventListener('click',()=>{if(spinning)return;const bank=state.opts.bank;state.balance+=bank;state.put+=bank;msg(`Added $${bank.toLocaleString()} to your balance.`,'');render();});
 function bankLabels(){const b=state.opts.bank.toLocaleString();$('reload').textContent=`Reload bank (+$${b})`;if(!armed)$('reset').textContent=`New game ($${b})`;}
 function openOptions(){$('bankin').value=state.opts.bank;$('banknote').textContent='';$('backupbox').hidden=true;bankLabels();logLabel();$('chipnote').textContent='';chipOpts();$('optpanel').hidden=false;}
