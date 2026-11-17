@@ -253,7 +253,7 @@ canvas{display:block}
   <div class="fcard">
     <div class="sthead"><h2 id="stath">Statistics</h2><button class="ghost" id="statclose">Close</button></div>
     <div id="statbody"></div>
-    <div class="frow" style="margin-top:10px"><button class="ghost" id="statclose2">Close</button></div>
+    <div class="frow" style="margin-top:10px;justify-content:space-between;align-items:center;flex-wrap:wrap"><button class="ghost" id="statreset">Reset statistics</button><span id="statresetnote" class="stnote" style="margin:0;flex:1;min-width:120px"></span><button class="ghost" id="statclose2">Close</button></div>
   </div>
 </div>
 <div id="optpanel" hidden role="dialog" aria-modal="true" aria-labelledby="opth">
@@ -302,7 +302,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='47';
+const VERSION='48';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 function normChips(a){if(!Array.isArray(a))return DEN0.slice();const o=CHIPSET.filter(v=>a.includes(v));return o.length>=1&&o.length<=6?o:DEN0.slice();}
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put','slotStats'];
@@ -541,7 +541,10 @@ let red=0,black=0,green=0,odd=0,even=0,lo=0,hi=0;const dz=[0,0,0],cl=[0,0,0];ALL
 const bar=(label,parts)=>`<div class="bar"><div class="bl">${label}</div><div class="bt">${parts.map(p=>`<span class="${p[2]}" style="flex:${Math.max(p[1],0.0001)}"><em>${p[0]?p[0]+' ':''}${pc1(p[1],d.N)}</em></span>`).join('')}</div></div>`;
 h+=`<div class="bars">${bar('Color',[['Red',red,'r'],['Black',black,'b'],['',green,'g']])}${bar('Odd / Even',[['Odd',odd,'x1'],['Even',even,'x2'],['',green,'g']])}${bar('Low / High',[['1–18',lo,'x1'],['19–36',hi,'x2'],['',green,'g']])}${bar('Dozens',[['1st',dz[0],'x1'],['2nd',dz[1],'x2'],['3rd',dz[2],'x3'],['',green,'g']])}${bar('Columns',[['Bottom',cl[0],'x1'],['Middle',cl[1],'x2'],['Top',cl[2],'x3'],['',green,'g']])}</div>`;
 if(d.played<d.N)h+=`<p class="stnote">Money figures cover the ${d.played.toLocaleString()} spins recorded with a bet. Number figures cover all ${d.N.toLocaleString()} spins.</p>`;return h;}
-function openStats(){$('statbody').innerHTML=statsHTML();$('statpanel').hidden=false;const c=$('statpanel').querySelector('.fcard');if(c)c.scrollTop=0;}
+function openStats(){stDisarm();$('statresetnote').textContent='';$('statbody').innerHTML=statsHTML();$('statpanel').hidden=false;const c=$('statpanel').querySelector('.fcard');if(c)c.scrollTop=0;}
+let stArm=false,stArmT=null;function stDisarm(){stArm=false;clearTimeout(stArmT);$('statreset').textContent='Reset statistics';$('statreset').style.borderColor='';$('statreset').style.color='';}
+$('statreset').addEventListener('click',()=>{if(spinning)return;if(!stArm){stArm=true;$('statreset').textContent='Tap again to erase all statistics';$('statreset').style.borderColor='var(--lose)';$('statreset').style.color='var(--lose)';$('statresetnote').textContent='Erases the spin log and saved-bet records. Balance, chips and saved bets stay.';stArmT=setTimeout(()=>{stDisarm();$('statresetnote').textContent='';},4000);return;}
+stDisarm();LOG=[];logSave();state.slotStats=[0,1,2,3].map(()=>({spins:0,wins:0,net:0}));save();$('statbody').innerHTML=statsHTML();$('statresetnote').textContent='Statistics reset. Counting starts over from your next spin.';const c=$('statpanel').querySelector('.fcard');if(c)c.scrollTop=0;});
 $('statbtn').addEventListener('click',openStats);$('statclose').addEventListener('click',()=>{$('statpanel').hidden=true;});$('statclose2').addEventListener('click',()=>{$('statpanel').hidden=true;});$('statpanel').addEventListener('click',e=>{if(e.target===$('statpanel'))$('statpanel').hidden=true;});
 
 $('fairbtn').addEventListener('click',openFair);
