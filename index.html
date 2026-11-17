@@ -45,10 +45,11 @@ button{font:inherit;cursor:pointer}
 #frame::after{content:'';position:absolute;inset:-9px;border-radius:38px;box-shadow:inset 0 0 0 1px rgba(212,175,55,.55)}
 @keyframes bulbs{from{opacity:1}to{opacity:.5}}
 @media (prefers-reduced-motion:reduce){#frame::before{animation:none}}
-#top{display:flex;flex-wrap:nowrap;align-items:baseline;gap:12px;flex:none;padding:0 4px 6px;border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}
+#top{display:flex;flex-wrap:nowrap;align-items:baseline;gap:calc(12px*var(--hs,1));flex:none;padding:0 4px 6px;border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}
 .stat{display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex:none}
-.stat .l{font-size:clamp(9.5px,1.35vw,11px);color:var(--muted)}
-.stat .v{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
+.stat .l{font-size:calc(clamp(9.5px,1.35vw,11px)*var(--hs,1));color:var(--muted)}
+#top [hidden]{display:none!important}
+.stat .v{font-family:var(--display);font-size:calc(clamp(14px,2.4vw,20px)*var(--hs,1));font-weight:500;line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
 #bal{min-width:2.2em}#bet{min-width:1.3em}#streak{min-width:.9em}#oddsv{min-width:1.9em}#net{min-width:1.6em}#lastv{min-width:.9em}
 .dgrp{display:flex;align-items:baseline;gap:clamp(8px,1.8vw,14px);flex:none;white-space:nowrap}
 @media (max-width:760px){.fw2{display:none}}
@@ -147,8 +148,14 @@ canvas{display:block}
 #gearmenu button{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--cream);font:inherit;font-size:13.5px;font-weight:600;text-align:left;white-space:nowrap}
 #gearmenu button svg{width:16px;height:16px;color:var(--gold);flex:none}
 #gearmenu button+button{box-shadow:0 -1px 0 rgba(241,239,232,.1)}
-#fairpanel,#streakpanel,#optpanel,#statpanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
-#fairpanel[hidden],#streakpanel[hidden],#optpanel[hidden],#statpanel[hidden]{display:none}
+#fairpanel,#streakpanel,#optpanel,#statpanel,#headpanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
+#fairpanel[hidden],#streakpanel[hidden],#optpanel[hidden],#statpanel[hidden],#headpanel[hidden]{display:none}
+.hrows{display:grid;gap:6px;margin:8px 0}
+.hrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--cream);font:inherit}
+.hrow .hn{font-family:var(--display);font-size:15px;min-width:72px}.hrow .hd{flex:1;font-size:11.5px;color:var(--muted);min-width:0}
+.hrow .hs{flex:none;font-size:11px;font-weight:600;letter-spacing:.06em;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.hrow.on{border-color:rgba(243,193,104,.6);background:rgba(243,193,104,.10)}.hrow.on .hs{background:var(--gold);border-color:var(--gold);color:#14301a}
+.hrow.lock{opacity:.8}.hrow.lock .hs{border-style:dashed}
 #statpanel .fcard{max-width:820px;background:radial-gradient(120% 80% at 50% 0,#1c4126 0,#14301a 55%,#0f2614 100%);border:1px solid rgba(243,193,104,.45);box-shadow:0 0 0 1px rgba(0,0,0,.5),0 18px 40px rgba(0,0,0,.55),inset 0 0 0 1px rgba(243,193,104,.12)}
 .sthead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
 .sthead h2{margin:0;font-size:24px;letter-spacing:.06em;text-transform:uppercase;background:linear-gradient(180deg,#ffe7ae,#e0a94a);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -210,11 +217,16 @@ canvas{display:block}
 <div id="frame" aria-hidden="true"></div>
 <div id="app">
   <header id="top">
-    <div class="stat"><span class="l">$ Balance</span><span class="v" id="bal">100</span></div>
-    <div class="stat"><span class="l">Net</span><span class="v" id="net">0</span></div>
-    <div class="stat"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
-    <div class="stat"><span class="l">Drought</span><span class="v" id="streak">0</span></div>
-    <span class="dgrp" id="streakbtn"><span class="stat"><span class="l">Odds</span><span class="v" id="oddsv">–</span></span><span class="stat"><span class="l">Last</span><span class="v" id="lastv">–</span></span></span>
+    <div class="stat" data-h="bal"><span class="l">$ Balance</span><span class="v" id="bal">100</span></div>
+    <div class="stat" data-h="net"><span class="l">Net</span><span class="v" id="net">0</span></div>
+    <div class="stat" data-h="bet"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
+    <div class="stat" data-h="win"><span class="l">Win</span><span class="v" id="winv">–</span></div>
+    <div class="stat" data-h="drought"><span class="l">Drought</span><span class="v" id="streak">0</span></div>
+    <div class="stat" data-h="odds"><span class="l">Odds</span><span class="v" id="oddsv">–</span></div>
+    <div class="stat" data-h="last"><span class="l">Last</span><span class="v" id="lastv">–</span></div>
+    <div class="stat" data-h="avg"><span class="l">Avg</span><span class="v" id="avgv">–</span></div>
+    <div class="stat" data-h="lrow"><span class="l">Losses</span><span class="v" id="lrowv">0</span></div>
+    <div class="stat" data-h="wrow"><span class="l">Wins</span><span class="v" id="wrowv">0</span></div>
     <span class="badges"><button class="fair gear" id="gearbtn" aria-haspopup="menu" aria-expanded="false" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></span>
   </header>
   <div id="main">
@@ -258,8 +270,17 @@ canvas{display:block}
 <div id="gearmenu" hidden role="menu" aria-label="Settings">
   <button role="menuitem" id="statbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-9"/></svg><span>Statistics</span></button>
   <button role="menuitem" id="optbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="#14301a"/><circle cx="15" cy="12" r="2.2" fill="#14301a"/><circle cx="8" cy="17" r="2.2" fill="#14301a"/></svg><span>Game options</span></button>
+  <button role="menuitem" id="headbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg><span>Header options</span></button>
   <button role="menuitem" id="streakbtn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 3 8-9"/><path d="M15 6h5v5"/></svg><span>Droughts</span></button>
   <button role="menuitem" id="fairbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Fair wheel</span></button>
+</div>
+<div id="headpanel" hidden role="dialog" aria-modal="true" aria-labelledby="headh">
+  <div class="fcard">
+    <div class="sthead"><h2 id="headh" style="font-family:var(--display);font-weight:500;font-size:20px;margin:0">Header options</h2><button class="ghost" id="headclose">Close</button></div>
+    <p style="margin:6px 0 0">Pick what shows across the top of the game. Tap a row to turn it on or off. Up to 6 fit next to your balance. <span id="headnote" style="color:var(--gold)"></span></p>
+    <div class="hrows" id="headrows"></div>
+    <div class="frow" style="justify-content:space-between"><button class="ghost" id="headdef">Back to default</button><button class="ghost" id="headclose2">Close</button></div>
+  </div>
 </div>
 <div id="statpanel" hidden role="dialog" aria-modal="true" aria-labelledby="stath">
   <div class="fcard">
@@ -314,12 +335,14 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='50';
+const VERSION='51';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
+const HEAD=[['net','Net','Your true win or loss, counting money you added'],['bet','Bet','What is on the table for this spin'],['win','Win','What the last spin won you'],['drought','Drought','Spins since the last green'],['odds','Odds','Chance a drought gets this long'],['last','Last','Length of the drought that just ended'],['avg','Avg','Average length of your finished droughts'],['lrow','Losses','Losing spins in a row right now'],['wrow','Wins','Winning spins in a row right now']],HEAD0=['net','bet','drought','odds','last'],HEADMAX=6;
+function normHead(a){if(!Array.isArray(a))return HEAD0.slice();return HEAD.map(x=>x[0]).filter(k=>a.includes(k)).slice(0,HEADMAX);}
 function normChips(a){if(!Array.isArray(a))return DEN0.slice();const o=CHIPSET.filter(v=>a.includes(v));return o.length>=1&&o.length<=6?o:DEN0.slice();}
-const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put','slotStats'];
+const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put','slotStats','run','lastWin'];
 function normSaved(v){const out=EMPTY6();if(Array.isArray(v)){v.slice(0,6).forEach((s,i)=>{if(s&&Array.isArray(s.bets))out[i]=s;});}else if(v&&typeof v==='object'){Object.keys(v).forEach(k=>{const i=parseInt(String(k).replace(/\D/g,''),10);if(i>=0&&i<6&&v[k]&&Array.isArray(v[k].bets))out[i]=v[k];});}return out;}
-function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:100,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=100;if(!CHIPSET.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;if(!out.opts||typeof out.opts!=='object'||Array.isArray(out.opts))out.opts={};out.opts.bank=Math.max(1,Math.min(1e9,Math.floor(+out.opts.bank||100)));out.opts.chips=normChips(out.opts.chips);out.opts.haptic=out.opts.haptic!==false;{const z=Array.isArray(out.slotStats)?out.slotStats:[];out.slotStats=[0,1,2,3].map(i=>{const x=z[i]&&typeof z[i]==='object'?z[i]:{};return{spins:+x.spins||0,wins:+x.wins||0,net:+x.net||0};});}if(typeof out.put!=='number'||!isFinite(out.put))out.put=out.balance+out.table.reduce((a,b)=>a+(+b.amount||0),0);return out;}
+function normState(src){try{src=JSON.parse(JSON.stringify(src||{}));}catch(e){src={};}const out={balance:100,hist:[],hits:{},lastBets:null,chip:10,saved:EMPTY6(),gen:0,rev:0};FIELDS.forEach(k=>{if(src&&src[k]!==undefined&&src[k]!==null)out[k]=src[k];});out.saved=normSaved(out.saved);if(!Array.isArray(out.hist))out.hist=[];if(!out.hits||typeof out.hits!=='object'||Array.isArray(out.hits))out.hits={};if(!Array.isArray(out.lastBets))out.lastBets=null;if(!Array.isArray(out.table))out.table=[];if(!Array.isArray(out.stack))out.stack=[];if(typeof out.balance!=='number')out.balance=100;if(!CHIPSET.includes(out.chip))out.chip=10;out.gen=+out.gen||0;out.rev=+out.rev||0;if(!out.opts||typeof out.opts!=='object'||Array.isArray(out.opts))out.opts={};out.opts.bank=Math.max(1,Math.min(1e9,Math.floor(+out.opts.bank||100)));out.opts.chips=normChips(out.opts.chips);out.opts.head=normHead(out.opts.head);out.run=(out.run&&typeof out.run==='object')?{l:+out.run.l||0,w:+out.run.w||0}:null;out.lastWin=typeof out.lastWin==='number'?out.lastWin:null;out.opts.haptic=out.opts.haptic!==false;{const z=Array.isArray(out.slotStats)?out.slotStats:[];out.slotStats=[0,1,2,3].map(i=>{const x=z[i]&&typeof z[i]==='object'?z[i]:{};return{spins:+x.spins||0,wins:+x.wins||0,net:+x.net||0};});}if(typeof out.put!=='number'||!isFinite(out.put))out.put=out.balance+out.table.reduce((a,b)=>a+(+b.amount||0),0);return out;}
 function contentSig(s){const n=normState(s);return JSON.stringify({b:n.balance,h:n.hist,k:n.hits,l:n.lastBets,c:n.chip,s:n.saved,g:n.gen,t:n.table,q:n.stack,r:!!n.restored,o:n.opts,p:n.put,ss:n.slotStats});}
 let state=normState({});
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s.balance==='number'&&Array.isArray(s.hist))state=normState(s);}catch(e){}
@@ -408,7 +431,7 @@ bets.forEach(b=>{tot+=b.amount;const d=document.createElement('div');d.className
 if(outEl[b.key]){d.style.left='50%';d.style.top='50%';outEl[b.key].appendChild(d);}else{const p=posFor(b.key);if(!p)return;d.style.left=p[0]+'px';d.style.top=p[1]+'px';grid.appendChild(d);}});
 $('bal').textContent=money(state.balance);$('bet').textContent=money(tot);
 let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;}$('streak').textContent=s;$('spins').textContent=state.hist.length.toLocaleString();
-{let on=0;bets.forEach(b=>on+=b.amount);const nt=state.balance+on-state.put,ne=$('net');ne.textContent=(nt>0?'+':nt<0?'−':'')+money(Math.abs(nt));ne.style.color=nt>0?'var(--win)':nt<0?'var(--lose)':'';}const ds=dryStats();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';
+{let on=0;bets.forEach(b=>on+=b.amount);const nt=state.balance+on-state.put,ne=$('net');ne.textContent=(nt>0?'+':nt<0?'−':'')+money(Math.abs(nt));ne.style.color=nt>0?'var(--win)':nt<0?'var(--lose)':'';}const ds=dryStats();ensureRun();$('avgv').textContent=ds.runs.length?(ds.runs.reduce((a,r)=>a+r,0)/ds.runs.length).toFixed(1):'–';$('lrowv').textContent=state.run.l;$('lrowv').style.color=state.run.l>=3?'var(--lose)':'';$('wrowv').textContent=state.run.w;{const lw=state.lastWin,we=$('winv');we.textContent=lw===null?'–':lw>0?'+'+money(lw):'0';we.style.color=lw>0?'var(--win)':'';}headApply();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';
 $('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
 for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
 ['undo','clear','dbl','plus1','minus1','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
@@ -454,7 +477,7 @@ document.addEventListener('click',e=>{const t=e.target;if(!navigator.vibrate||!t
 const HX_ON=/[?&]hx=1/.test(location.search)||(!navigator.vibrate&&('ontouchstart' in window));let hx=null;
 function hxSync(){if(!hx)return;const open=HXP.some(id=>!$(id).hidden);hx.style.display=(state.opts&&state.opts.haptic!==false&&!open)?'block':'none';hxCoverSoon();}
 /* Pages (Options, Droughts, Fair wheel): each button gets its own clear label wired to one shared switch, so a real tap ticks there too. Labels sit in a layer inside the scrolling card and are re-placed whenever the page changes. */
-const HXP=['fairpanel','streakpanel','optpanel','statpanel'];let hxT=null,hxObs=null;
+const HXP=['fairpanel','streakpanel','optpanel','statpanel','headpanel'];let hxT=null,hxObs=null;
 function hxCoverSoon(){if(!hx)return;clearTimeout(hxT);hxT=setTimeout(hxCover,40);}
 function hxCover(){if(!hx)return;try{if(hxObs)hxObs.disconnect();HXP.forEach(id=>{const p=$(id),card=p.querySelector('.fcard');if(!card)return;let layer=card.querySelector('.hxlayer');if(!layer){layer=document.createElement('div');layer.className='hxlayer';layer.setAttribute('aria-hidden','true');card.appendChild(layer);}layer.innerHTML='';if(p.hidden||!state.opts||state.opts.haptic===false)return;const cr=card.getBoundingClientRect();card.querySelectorAll('button').forEach(b=>{if(b.disabled||!b.offsetParent)return;const r=b.getBoundingClientRect();if(r.width<2||r.height<2)return;const l=document.createElement('label');l.htmlFor='hxsw';l.style.cssText=`left:${r.left-cr.left-card.clientLeft+card.scrollLeft}px;top:${r.top-cr.top-card.clientTop+card.scrollTop}px;width:${r.width}px;height:${r.height}px`;l.addEventListener('click',()=>{try{if(!b.disabled)b.click();}catch(err){}hxCoverSoon();});layer.appendChild(l);});});}catch(err){}
 try{if(!hxObs)hxObs=new MutationObserver(hxCoverSoon);HXP.forEach(id=>hxObs.observe($(id),{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','disabled','class']}));}catch(err){}}
@@ -475,7 +498,8 @@ const myT0=t0;setTimeout(()=>{if(spinning&&spinT0===myT0)failSafe(new Error('spi
 let spinT0=0,lastErr='',spinPreBal=0;
 function failSafe(err){lastErr=errText(err);spinning=false;try{if(!Array.isArray(state.hist))state.hist=[];if(!state.hits||typeof state.hits!=='object')state.hits={};state=normState(state);state.balance=spinPreBal;(state.table||[]).forEach(b=>{if(b&&b.amount>0)state.balance+=b.amount;});state.table=[];state.stack=[];hydrateTable();}catch(e){}try{render();}catch(e){}msg('That spin could not be scored ('+lastErr+'). Chips returned. Show Claude this message.','bad');}
 window.addEventListener('error',e=>{if(spinning)failSafe(e.error||new Error(e.message||'error'));});
-function resolve(n){let win=0,staked=0;const usedSlot=slotOfTable();bets.forEach(b=>{staked+=b.amount;if(b.nums.includes(n))win+=b.amount*(b.pay+1);});state.balance+=win;state.hist.push(n);if(state.hist.length>1000)state.hist=state.hist.slice(-1000);const k=String(n);state.hits[k]=(state.hits[k]||0)+1;state.lastBets=[...bets.values()].map(b=>Object.assign({},b));if(pendingDraw)state.lastDraw={raw:pendingDraw.raw,idx:pendingDraw.idx,n};bets.clear();stack=[];const net=win-staked;logSpin(n,staked,net);if(usedSlot>=0&&state.slotStats&&state.slotStats[usedSlot]){const x=state.slotStats[usedSlot];x.spins++;if(net>0)x.wins++;x.net+=net;}
+function ensureRun(){if(!state.run){let l=0,w=0;try{const d=statsData();l=d.curL;w=d.curW;}catch(e){}state.run={l,w};}}
+function resolve(n){let win=0,staked=0;const usedSlot=slotOfTable();bets.forEach(b=>{staked+=b.amount;if(b.nums.includes(n))win+=b.amount*(b.pay+1);});state.balance+=win;state.hist.push(n);if(state.hist.length>1000)state.hist=state.hist.slice(-1000);const k=String(n);state.hits[k]=(state.hits[k]||0)+1;state.lastBets=[...bets.values()].map(b=>Object.assign({},b));if(pendingDraw)state.lastDraw={raw:pendingDraw.raw,idx:pendingDraw.idx,n};bets.clear();stack=[];const net=win-staked;ensureRun();logSpin(n,staked,net);if(staked>0){if(net>0){state.run.w++;state.run.l=0;}else if(net<0){state.run.l++;state.run.w=0;}state.lastWin=net;}if(usedSlot>=0&&state.slotStats&&state.slotStats[usedSlot]){const x=state.slotStats[usedSlot];x.spins++;if(net>0)x.wins++;x.net+=net;}
 $('res').innerHTML=`<span class="big" style="background:${colorOf(n)}">${n}</span><span class="sub">${nameOf(n)}</span>`;
 msg(win>0?`Paid ${money(win)} · net ${net>=0?'+':'−'}${money(Math.abs(net))}`:`No hit · −${money(staked)}`,net>=0?'good':'bad');
 render();showDolly(n);if(net>0)fireworks(net);else if(net<0)skulls(net);else flashLabel('EVEN','');}
@@ -556,13 +580,19 @@ if(d.played<d.N)h+=`<p class="stnote">Money figures cover the ${d.played.toLocal
 function openStats(){stDisarm();$('statresetnote').textContent='';$('statbody').innerHTML=statsHTML();$('statpanel').hidden=false;const c=$('statpanel').querySelector('.fcard');if(c)c.scrollTop=0;}
 let stArm=false,stArmT=null;function stDisarm(){stArm=false;clearTimeout(stArmT);$('statreset').textContent='Reset statistics';$('statreset').style.borderColor='';$('statreset').style.color='';}
 $('statreset').addEventListener('click',()=>{if(spinning)return;if(!stArm){stArm=true;$('statreset').textContent='Tap again to erase all statistics';$('statreset').style.borderColor='var(--lose)';$('statreset').style.color='var(--lose)';$('statresetnote').textContent='Erases the spin log and saved-bet records. Balance, chips and saved bets stay.';stArmT=setTimeout(()=>{stDisarm();$('statresetnote').textContent='';},4000);return;}
-stDisarm();LOG=[];logSave();state.slotStats=[0,1,2,3].map(()=>({spins:0,wins:0,net:0}));save();$('statbody').innerHTML=statsHTML();$('statresetnote').textContent='Statistics reset. Counting starts over from your next spin.';const c=$('statpanel').querySelector('.fcard');if(c)c.scrollTop=0;});
+stDisarm();LOG=[];logSave();state.run={l:0,w:0};state.slotStats=[0,1,2,3].map(()=>({spins:0,wins:0,net:0}));save();$('statbody').innerHTML=statsHTML();$('statresetnote').textContent='Statistics reset. Counting starts over from your next spin.';const c=$('statpanel').querySelector('.fcard');if(c)c.scrollTop=0;});
 function gearClose(){$('gearmenu').hidden=true;$('gearbtn').setAttribute('aria-expanded','false');}
 function gearOpen(){const m=$('gearmenu'),r=$('gearbtn').getBoundingClientRect();m.hidden=false;m.style.top=Math.round(r.bottom+6)+'px';m.style.right=Math.max(6,Math.round(innerWidth-r.right))+'px';$('gearbtn').setAttribute('aria-expanded','true');}
 $('gearbtn').addEventListener('click',e=>{e.stopPropagation();if($('gearmenu').hidden)gearOpen();else gearClose();});
 $('gearmenu').addEventListener('click',()=>gearClose());
 document.addEventListener('click',e=>{if(e.target&&e.target.id==='hx')return;if(!$('gearmenu').hidden&&!(e.target.closest&&(e.target.closest('#gearmenu')||e.target.closest('#gearbtn'))))gearClose();});
 addEventListener('resize',gearClose);
+function headApply(){const on=state.opts.head;document.querySelectorAll('#top [data-h]').forEach(e=>{const k=e.dataset.h;e.hidden=k!=='bal'&&!on.includes(k);});fitTop();}
+function fitTop(){const t=$('top');t.style.setProperty('--hs','1');let s=1,g=0;while(t.scrollWidth>t.clientWidth+1&&s>0.62&&g++<12){s-=0.04;t.style.setProperty('--hs',s.toFixed(2));}}
+function headRows(){const on=state.opts.head,box=$('headrows');box.innerHTML='<div class="hrow on lock"><span class="hn">$ Balance</span><span class="hd">Your chips. Always shown.</span><span class="hs">ALWAYS</span></div>';HEAD.forEach(([k,name,desc])=>{const b=document.createElement('button');b.className='hrow'+(on.includes(k)?' on':'');b.setAttribute('aria-pressed',on.includes(k));b.innerHTML=`<span class="hn">${name}</span><span class="hd">${desc}</span><span class="hs">${on.includes(k)?'ON':'OFF'}</span>`;b.addEventListener('click',()=>{let c=state.opts.head.slice();if(c.includes(k))c=c.filter(x=>x!==k);else{if(c.length>=HEADMAX){$('headnote').textContent=HEADMAX+' is the most that fit. Turn one off first.';return;}c.push(k);}state.opts.head=normHead(c);$('headnote').textContent='';headRows();render();});box.appendChild(b);});}
+function openHead(){$('headnote').textContent='';headRows();$('headpanel').hidden=false;}
+$('headbtn').addEventListener('click',openHead);[ 'headclose','headclose2' ].forEach(id=>$(id).addEventListener('click',()=>{$('headpanel').hidden=true;}));$('headpanel').addEventListener('click',e=>{if(e.target===$('headpanel'))$('headpanel').hidden=true;});
+$('headdef').addEventListener('click',()=>{state.opts.head=HEAD0.slice();$('headnote').textContent='';headRows();render();});addEventListener('resize',()=>{try{fitTop();}catch(e){}});
 $('streakbtn2').addEventListener('click',openStreaks);
 $('statbtn').addEventListener('click',openStats);$('statclose').addEventListener('click',()=>{$('statpanel').hidden=true;});$('statclose2').addEventListener('click',()=>{$('statpanel').hidden=true;});$('statpanel').addEventListener('click',e=>{if(e.target===$('statpanel'))$('statpanel').hidden=true;});
 
@@ -601,7 +631,7 @@ $('optbtn').addEventListener('click',openOptions);setTimeout(()=>{try{let has=nu
 $('banksave').addEventListener('click',()=>{const v=Math.floor(+$('bankin').value);if(!(v>=1)){$('banknote').textContent='Enter a whole number, 1 or more.';return;}state.opts.bank=Math.min(1e9,v);$('bankin').value=state.opts.bank;bankLabels();render();$('banknote').textContent=`Saved. New games start with $${state.opts.bank.toLocaleString()}.`;});
 let armed=false,armT=null;
 $('reset').addEventListener('click',()=>{if(spinning)return;if(!armed){armed=true;$('reset').textContent='Tap again to start a new game';armT=setTimeout(()=>{armed=false;bankLabels();},3000);return;}
-clearTimeout(armT);armed=false;bets.clear();stack=[];if(mode)setMode('');clearDolly();const bank=state.opts.bank;state=normState({balance:bank,put:bank,chip:state.chip,saved:state.saved,slotStats:state.slotStats,gen:(state.gen||0)+1,restored:state.restored,opts:state.opts});hydrateTable();bankLabels();$('res').innerHTML='';msg(`New game. $${bank.toLocaleString()} to start. Saved bets kept.`,'');selChip();render();$('optpanel').hidden=true;});
+clearTimeout(armT);armed=false;bets.clear();stack=[];if(mode)setMode('');clearDolly();const bank=state.opts.bank;state=normState({balance:bank,put:bank,run:{l:0,w:0},chip:state.chip,saved:state.saved,slotStats:state.slotStats,gen:(state.gen||0)+1,restored:state.restored,opts:state.opts});hydrateTable();bankLabels();$('res').innerHTML='';msg(`New game. $${bank.toLocaleString()} to start. Saved bets kept.`,'');selChip();render();$('optpanel').hidden=true;});
 const standalone=window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
 const iOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let hintOff=false;try{hintOff=localStorage.getItem(KEY+'-hint')==='off';}catch(e){}
