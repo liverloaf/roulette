@@ -214,7 +214,7 @@ canvas{display:block}
     <div class="stat"><span class="l">Net</span><span class="v" id="net">0</span></div>
     <div class="stat"><span class="l">Bet</span><span class="v" id="bet">0</span></div>
     <div class="stat"><span class="l">Drought</span><span class="v" id="streak">0</span></div>
-    <button class="statbtn dgrp" id="streakbtn" aria-haspopup="dialog" title="Open the drought page"><span class="stat"><span class="l">Odds</span><span class="v" id="oddsv">–</span></span><span class="stat"><span class="l">Last</span><span class="v" id="lastv">–</span></span><span class="chev" aria-hidden="true">›</span></button>
+    <span class="dgrp" id="streakbtn"><span class="stat"><span class="l">Odds</span><span class="v" id="oddsv">–</span></span><span class="stat"><span class="l">Last</span><span class="v" id="lastv">–</span></span></span>
     <span class="badges"><button class="fair gear" id="gearbtn" aria-haspopup="menu" aria-expanded="false" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></span>
   </header>
   <div id="main">
@@ -314,7 +314,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='49';
+const VERSION='50';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 function normChips(a){if(!Array.isArray(a))return DEN0.slice();const o=CHIPSET.filter(v=>a.includes(v));return o.length>=1&&o.length<=6?o:DEN0.slice();}
 const FIELDS=['balance','hist','hits','lastBets','chip','saved','gen','rev','table','stack','restored','restored2','lastDraw','updatedAt','opts','put','slotStats'];
@@ -520,7 +520,7 @@ $('stkmmm').innerHTML=`<tr><th></th><th>Yours</th><th>Fair wheel</th></tr>`+mrow
 const pills=d.runs.slice().reverse().map(r=>`<span>${r}</span>`);$('stklist').innerHTML=(`<span class="now">${d.L} now</span>`+pills.join(''))+(done?'':' <span style="border:none;color:var(--muted)">No finished droughts yet.</span>');
 let t='<tr><th>Drought</th><th>Chance</th><th>About 1 in</th></tr>';const top2=Math.max(100,d.L);for(let n=1;n<=top2;n++){if(n>100&&n!==d.L)continue;const p=Math.pow(36/38,n),oi=1/p;t+=`<tr${n===d.L?' class="cur"':''}><td>${n}${n===d.L?' (now)':''}</td><td>${(p*100).toFixed(1)}%</td><td>${oi<10?oi.toFixed(1):Math.round(oi).toLocaleString()}</td></tr>`;}$('stktbl').innerHTML=t;}
 function openStreaks(){streakText();$('streakpanel').hidden=false;}
-$('streakbtn').addEventListener('click',openStreaks);$('streakclose').addEventListener('click',()=>{$('streakpanel').hidden=true;});$('streakpanel').addEventListener('click',e=>{if(e.target===$('streakpanel'))$('streakpanel').hidden=true;});
+$('streakclose').addEventListener('click',()=>{$('streakpanel').hidden=true;});$('streakpanel').addEventListener('click',e=>{if(e.target===$('streakpanel'))$('streakpanel').hidden=true;});
 function openFair(){fairText();fairFooter();$('fairpanel').hidden=false;}
 /* ---------- Statistics page ---------- */
 const sgn=v=>(v>0?'+':v<0?'−':'')+'$'+money(Math.abs(v));
