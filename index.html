@@ -94,8 +94,8 @@ canvas{display:block}
 #msg.good{color:var(--win)}
 #msg.bad{color:var(--lose)}
 .histlbl{font-size:10.5px;color:var(--muted);text-align:center;white-space:nowrap}
-.hist{display:flex;gap:3px;flex-wrap:nowrap;justify-content:flex-start;height:20px;overflow:hidden;width:100%}
-.pill{min-width:20px;height:20px;padding:0 4px;border-radius:10px;color:#fff;font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.hist{display:flex;gap:3px;flex-wrap:nowrap;justify-content:center;height:20px;flex:none;overflow:hidden;width:100%}
+.pill{flex:none;min-width:20px;height:20px;padding:0 4px;border-radius:10px;color:#fff;font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
 .small{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap;margin:0 0 10px}
 .ghost{background:transparent;color:var(--cream);border:1px solid rgba(241,239,232,.45);border-radius:7px;padding:5px 8px;font-size:11px;white-space:nowrap}
 .ghost:disabled,.mini:disabled,.slot:disabled,.acts button:disabled,#spin:disabled{opacity:.4}
@@ -401,7 +401,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='56';
+const VERSION='57';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 const HEAD=[
 {k:'net',n:'Net',g:'Money',d:'Your true win or loss, counting money you added',x:'Balance plus the chips on the table, minus everything you have put in (starting bank and every reload). Green with a plus means you are ahead; red with a minus means you are behind. Example: start with $100, reload $100, balance now $150. Net reads −50.'},
@@ -504,7 +504,7 @@ for(const k in cells){const n=k==='00'?'00':+k;const b=cellBox(n);pos(cells[k],b
 [1,2,3].forEach(d=>pos(outEl['doz'+d],CW*(1+4*(d-1)),3*CH,4*CW,OH));
 ['low','even','red','black','odd','high'].forEach((k,i)=>pos(outEl[k],CW*(1+2*i),3*CH+OH,2*CW,OH));
 grid.style.fontSize=CW<32?'14px':'17px';
-const ws=Math.max(110,Math.min(leftW-4,mh-112));cv.style.width=ws+'px';cv.style.height=ws+'px';cv.width=Math.round(ws*dpr);cv.height=Math.round(ws*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);R=ws/2;if(!spinning)bR=R-38*(R/115);
+let lo=0,ln=0;[...left.children].forEach(c=>{if(c.id!=='wheel'){lo+=c.offsetHeight;ln++;}});const ws=Math.max(84,Math.min(leftW-4,mh-lo-5*ln-3));cv.style.width=ws+'px';cv.style.height=ws+'px';cv.width=Math.round(ws*dpr);cv.height=Math.round(ws*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);R=ws/2;if(!spinning)bR=R-38*(R/115);
 draw();render();}
 function spot(x,y){const Hn=3*CH;if(x<0||x>13*CW||y<0||y>Hn)return null;
 if(x<CW){if(Math.abs(y-1.5*CH)<10)return{key:'sp0-00',nums:[0,'00'],pay:17};return y<1.5*CH?{key:'s00',nums:['00'],pay:35}:{key:'s0',nums:[0],pay:35};}
@@ -540,7 +540,7 @@ if(has('spins'))set('spins',state.hist.length.toLocaleString());
 if(has('number')){const hl=state.hist.length,n=hl?state.hist[hl-1]:null;set('number',n===null?'–':String(n),n===null?'':isG(n)?'#7fd35f':reds.includes(+n)?'#ff8f88':'');}
 if(has('hot')||has('cold')){const hl=state.hist.length;if(hl){const hc=hotCold(),last={};state.hist.forEach((x,i)=>{last[String(x)]=i;});const since=k=>(k in last)?hl-1-last[k]:hl+1,cold=ALLKEYS.slice().sort((a,b)=>since(b)-since(a))[0];set('hot',hc.hot[0]);set('cold',cold);}else{set('hot','–');set('cold','–');}}}
 headApply();$('oddsv').textContent=ds.L?pctFmt(ds.theory):'–';$('lastv').textContent=ds.runs.length?String(ds.runs[ds.runs.length-1]):'–';
-$('hist').innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');
+{const he=$('hist');he.innerHTML=state.hist.slice().reverse().slice(0,12).map(h=>`<span class="pill" style="background:${colorOf(h)}">${h}</span>`).join('');let g=0;while(he.lastChild&&he.scrollWidth>he.clientWidth+1&&g++<12)he.removeChild(he.lastChild);}
 for(const k in cells){const h=state.hits[k];cells[k].querySelector('.hit').textContent=h?h:'';}
 ['undo','clear','spin','reload','reset','savebtn','delbtn'].forEach(id=>$(id).disabled=spinning);actSync();bgApply();$('rep').disabled=spinning||!state.lastBets||!state.lastBets.length;
 renderSlots();positionDolly();save();}
