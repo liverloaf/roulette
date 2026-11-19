@@ -274,6 +274,7 @@ canvas{display:block}
     <div class="stat" data-h="offpeak"><span class="l">Off peak</span><span class="v" id="hv_offpeak">–</span></div>
     <div class="stat" data-h="best"><span class="l">Best win</span><span class="v" id="hv_best">–</span></div>
     <div class="stat" data-h="walk"><span class="l">Walk</span><span class="v" id="hv_walk">–</span></div>
+    <div class="stat" data-h="lastpct"><span class="l">Last %</span><span class="v" id="hv_lastpct">–</span></div>
     <div class="stat" data-h="call"><span class="l">Call</span><span class="v" id="hv_call">–</span></div>
     <div class="stat" data-h="floor"><span class="l">Floor</span><span class="v" id="hv_floor">–</span></div>
     <div class="stat" data-h="cover"><span class="l">Covered</span><span class="v" id="hv_cover">–</span></div>
@@ -451,7 +452,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='65';
+const VERSION='66';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 const HEAD=[
 {k:'net',n:'Net',g:'Money',d:'Your true win or loss, counting money you added',x:'Balance plus the chips on the table, minus everything you have put in (starting bank and every reload). Green with a plus means you are ahead; red with a minus means you are behind. Example: start with $100, reload $100, balance now $150. Net reads −50.'},
@@ -459,6 +460,7 @@ const HEAD=[
 {k:'win',n:'Win',g:'Money',d:'What the last spin won or lost you',x:'Your result on the last spin, after taking out what you bet. A win shows in green with a plus. A loss shows in red with a minus. It reads 0 when the spin broke even and a dash before your first spin.'},
 {k:'putin',n:'Put in',g:'Money',d:'Total money you have added',x:'Your starting bank plus every reload this game. Net is measured against this number.'},
 {k:'ret',n:'Return',g:'Money',d:'How much comes back for every $100 you bet',x:'Everything paid back to you divided by everything you bet, since you last reset statistics. A fair American wheel returns 94.7% over a long time. Above that you are running lucky; below it, unlucky.'},
+{k:'lastpct',n:'Last %',g:'Money',d:'Last spin’s win or loss as a percent of what you bet',x:'What the last spin won or lost, divided by what you had on the table for it. Bet $4.50 and come out $13.50 ahead, and it reads +300%. Lose every chip and it reads −100%. Get part of your bet back and it lands in between, like −50%. Break even and it reads 0%. Green for a win, red for a loss, a dash before your first bet. It is the Win readout turned into a percent, so a 2x or 3x bet reads the same as the plain one.'},
 {k:'winpct',n:'Win %',g:'Money',d:'Share of your spins that won',x:'Winning spins divided by spins with a bet, since you last reset statistics. Read it next to Chance: if Chance says 58% and Win % says 45%, your layouts have been running cold.'},
 {k:'peak',n:'Peak',g:'Money',d:'The best point you have reached',x:'Your highest running win or loss since you last reset statistics. +61 means that at your best you were $61 ahead.'},
 {k:'offpeak',n:'Off peak',g:'Money',d:'How far below your best you are now',x:'Peak minus where you stand now. 0 means you are sitting at your best point. A number that keeps growing means the session has turned.'},
@@ -582,6 +584,7 @@ let s=0;for(let i=state.hist.length-1;i>=0;i--){if(isG(state.hist[i]))break;s++;
 if(has('cover')||has('chance')||has('pays')){if(bets.size){const o=tableOdds(),pos=o.rows.filter(r=>r.net>0).map(r=>r.net);set('cover',o.covered);set('chance',Math.round(100*o.winN/38)+'%');set('pays',pos.length?(pos.length>1?'+'+money(Math.min(...pos))+'/+'+money(Math.max(...pos)):'+'+money(pos[0])):'0');}else{set('cover','–');set('chance','–');set('pays','–');}}
 if(has('set')){const si=slotOfTable();set('set',si>=0?si+1:'–');}
 if(has('walk')||has('floor')){let on2=0;bets.forEach(b=>on2+=b.amount);const total=state.balance+on2,r2=v=>Math.round(v*100)/100;if(state.floor){const fb=r2(state.put+state.floor);set('floor',money(fb),total<fb?'var(--lose)':'var(--gold)');set('walk','–');}else{const wb=Math.max(0,r2(state.put-effLimit(state.put)));set('floor','–');set('walk',money(wb),total<=wb?'var(--lose)':'');}}
+if(has('lastpct')){const lw=state.lastWin,lb=state.lastBets;let stk=0;if(Array.isArray(lb))lb.forEach(b=>stk+=b.amount);if(lw===null||!(stk>0))set('lastpct','–');else{const p=Math.round(100*lw/stk);set('lastpct',(p>0?'+':p<0?'−':'')+Math.abs(p)+'%',p>0?'var(--win)':p<0?'var(--lose)':'');}}
 if(has('call')){const c=callNow();set('call',c.t,c.c);}
 if(has('putin'))set('putin',money(state.put));
 if(has('ret'))set('ret',T.bet?(100*T.paid/T.bet).toFixed(1)+'%':'–',T.bet?(T.paid/T.bet>=0.947?'var(--win)':'var(--lose)'):'');
