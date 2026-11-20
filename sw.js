@@ -1,4 +1,4 @@
-const CACHE = 'daves-roulette-v71';
+const CACHE = 'daves-roulette-v72';
 const CORE = ['./index.html', './manifest.json', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
