@@ -461,7 +461,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='70';
+const VERSION='71';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 const HEAD=[
 {k:'net',n:'Net',g:'Money',d:'Your true win or loss, counting money you added',x:'Balance plus the chips on the table, minus everything you have put in (starting bank and every reload). Green with a plus means you are ahead; red with a minus means you are behind. Example: start with $100, reload $100, balance now $150. Net reads −50.'},
@@ -678,7 +678,7 @@ arcade:{bpm:132,sw:0,w:'square',bw:'square',len:.16,vol:.22,ch:[[48,[0,4,7,12]],
 calm:{bpm:60,sw:0,w:'sine',bw:'sine',len:1.6,vol:.6,ch:[[48,[0,4,7,11]],[41,[0,4,7,11]],[45,[0,3,7,10]],[43,[0,4,7,9]]],arp:[0,-1,2,-1,1,-1,3,-1],bass:[0,-1,-1,-1,-1,-1,-1,-1]}};
 function tuneTick(){const a=AC,T=TUNES[tuneOn];if(!a||!T||a.state!=='running')return;const sp=30/T.bpm;if(tuneNext<a.currentTime)tuneNext=a.currentTime+0.05;while(tuneNext<a.currentTime+0.35){const i=tuneStep%8,c=T.ch[Math.floor(tuneStep/8)%T.ch.length],t=tuneNext+(i%2?T.sw*sp:0),ai=T.arp[i],bi=T.bass[i];if(ai>=0)tone(a,mf(c[0]+12+c[1][ai%c[1].length]),t,T.len,T.w,.5*T.vol,tuneG);if(bi>=0)tone(a,mf(c[0]-12+c[1][bi%c[1].length]),t,Math.max(.25,T.len),T.bw,.8*T.vol,tuneG);tuneStep++;tuneNext+=sp;}}
 function tuneStop(){clearInterval(tuneT);tuneT=null;tuneOn=null;if(tuneG&&AC){try{tuneG.gain.setTargetAtTime(0,AC.currentTime,.05);}catch(e){}}tuneG=null;}
-function tuneSync(){const k=(state.opts&&state.opts.tune)||'off';if(k===tuneOn)return;tuneStop();if(k==='off'||!TUNES[k])return;const a=ac();if(!a)return;tuneG=a.createGain();tuneG.gain.value=.11;tuneG.connect(a.destination);tuneOn=k;tuneStep=0;tuneNext=0;tuneT=setInterval(tuneTick,90);}
+function tuneSync(){const k=(state.opts&&state.opts.tune)||'off';if(k===tuneOn)return;tuneStop();if(k==='off'||!TUNES[k])return;const a=ac();if(!a)return;tuneG=a.createGain();tuneG.gain.value=.2;tuneG.connect(a.destination);tuneOn=k;tuneStep=0;tuneNext=0;tuneT=setInterval(tuneTick,90);}
 document.addEventListener('visibilitychange',()=>{try{if(!AC)return;if(document.hidden)AC.suspend();else if(tuneOn)AC.resume();}catch(e){}});
 document.addEventListener('click',e=>{const t=e.target;if(!t||!t.closest)return;if(Date.now()-swpAt<450)return;if(t.closest('button')||t.closest('#grid')){if(!(t.closest('#sndopts')||t.closest('#tuneopts')||t.closest('#spinopts')||t.closest('#winopts')||t.closest('#loseopts')))sndPlay();tuneSync();}},true);
 function sndOpts(){[['sndopts',SNDS,'snd'],['spinopts',SPINL,'sndSpin'],['winopts',WINL,'sndWin'],['loseopts',LOSEL,'sndLose'],['tuneopts',TUNEL,'tune']].forEach(([id,list,key])=>{const box=$(id);box.innerHTML='';list.forEach(([k,name])=>{const b=document.createElement('button');b.textContent=name;const on=state.opts[key]===k;b.className=on?'on':'';b.setAttribute('aria-pressed',on);b.addEventListener('click',()=>{state.opts[key]=k;sndOpts();render();if(key==='snd')sndPlay(k);else if(key==='sndSpin')spinSnd(1600,k);else if(key==='sndWin')winSnd(k);else if(key==='sndLose')loseSnd(k);else tuneSync();});box.appendChild(b);});});}
