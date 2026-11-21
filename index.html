@@ -131,6 +131,7 @@ canvas{display:block}
 .slot.cold.filled{border-color:#85b7eb;background:rgba(133,183,235,.14)}
 .slot.hot.filled .sn{color:#f5c4b3}
 .slot.cold.filled .sn{color:#b5d4f4}
+body.simmode #spin{background:var(--gold);border-color:var(--gold);color:#14301a}body.simmode #frame{box-shadow:inset 0 0 0 2px var(--gold)}body.simmode [data-h="bal"] .l::after{content:' · SIM';color:var(--gold)}
 #spin{height:40px;min-width:116px;padding:0 18px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#fff;font-family:var(--display);font-size:19px;letter-spacing:.05em;flex:none}
 .dolly{position:absolute;width:22px;height:30px;margin:-25px 0 0 -11px;z-index:4;pointer-events:none;background:linear-gradient(90deg,#7d5f17,#f6dc86 42%,#c79a2e 70%,#7d5f17) center 11px/8px 13px no-repeat;filter:drop-shadow(0 3px 2px rgba(0,0,0,.6));will-change:transform}
 .dolly::before{content:"";position:absolute;left:4px;top:0;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6cf,#f0c955 45%,#a87b1c 85%);box-shadow:inset 0 0 0 1px rgba(90,62,8,.7)}
@@ -296,7 +297,7 @@ canvas{display:block}
     <div class="stat" data-h="spins"><span class="l">Spins</span><span class="v" id="hv_spins">–</span></div>
     <div class="stat" data-h="hot"><span class="l">Hot</span><span class="v" id="hv_hot">–</span></div>
     <div class="stat" data-h="cold"><span class="l">Cold</span><span class="v" id="hv_cold">–</span></div>
-    <span class="badges"><button class="fair gear" id="gearbtn" aria-haspopup="menu" aria-expanded="false" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></span>
+    <span class="badges"><button class="fair" id="simexit" hidden style="border-color:var(--gold);color:var(--gold);font-weight:700;padding:0 12px;height:34px;border-radius:9px">Exit simulator</button><button class="fair gear" id="gearbtn" aria-haspopup="menu" aria-expanded="false" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></span>
   </header>
   <div id="main">
     <aside id="left" aria-label="Wheel and results">
@@ -375,7 +376,7 @@ canvas{display:block}
 <div id="simpanel" hidden role="dialog" aria-modal="true" aria-labelledby="simh">
   <div class="fcard">
     <div class="sthead"><h2 id="simh">Simulator</h2><button class="ghost" id="simclose">Close</button></div>
-    <p class="stnote" style="font-size:11.5px">Plays 1,000 sessions in about a second so you can see how a bet and a method behave before you play them.</p>
+    <p class="stnote" style="font-size:11.5px">Plays 1,000 sessions in about a second so you can see how a bet and a method behave before you play them. Close this to change the chips on the simulator table, then press Simulate again.</p>
     <div class="fxk">Bet · cost per spin · chance to win</div><div class="dlist" id="simbets"></div>
     <div class="fxk">Method</div><div class="dlist" id="simmeth"></div><div class="stnote" id="simmnote" style="margin:0 0 4px"></div>
     <div class="fxk">Spins per session</div><div class="dlist" id="simspins"></div>
@@ -462,7 +463,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='73';
+const VERSION='74';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 const HEAD=[
 {k:'net',n:'Net',g:'Money',d:'Your true win or loss, counting money you added',x:'Balance plus the chips on the table, minus everything you have put in (starting bank and every reload). Green with a plus means you are ahead; red with a minus means you are behind. Example: start with $100, reload $100, balance now $150. Net reads −50.'},
@@ -509,13 +510,13 @@ try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s.balance==='numb
 let bets=new Map(),stack=[],spinning=false,wAng=0,bAng=-Math.PI/2,bR=80,R=80;
 hydrateTable();
 let lastSig='';
-function save(){state.table=[...bets.values()].map(b=>({key:b.key,nums:b.nums,pay:b.pay,amount:b.amount}));state.stack=stack.slice();const sig=contentSig(state);if(sig===lastSig)return;lastSig=sig;state.rev=(state.rev||0)+1;state.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}cloudSchedule();}
+function save(){if(simMode)return;state.table=[...bets.values()].map(b=>({key:b.key,nums:b.nums,pay:b.pay,amount:b.amount}));state.stack=stack.slice();const sig=contentSig(state);if(sig===lastSig)return;lastSig=sig;state.rev=(state.rev||0)+1;state.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}cloudSchedule();}
 function payload(){const p=JSON.parse(JSON.stringify(normState(state)));const m={};p.saved.forEach((s,i)=>{if(s)m['s'+i]=s;});p.saved=m;return p;}
 function hydrateTable(){bets=new Map();(Array.isArray(state.table)?state.table:[]).forEach(b=>{if(b&&b.key&&Array.isArray(b.nums)&&typeof b.amount==='number'&&b.amount>0)bets.set(b.key,{key:b.key,nums:b.nums,pay:b.pay,amount:b.amount});});stack=(Array.isArray(state.stack)?state.stack:[]).filter(p=>p&&bets.has(p.key)&&typeof p.amount==='number');}
 let cloudDoc=null,cloudTimer=null,cloudBusy=false,cloudDirty=false,cloudHold=0,cloudStatus='starting',cloudSavedAt=0,cloudErr='';
 const errText=e=>{try{return (e&&(e.message||e.code||String(e)))||'unknown error';}catch(x){return 'unknown error';}};
 function cloudSchedule(){if(!cloudDoc)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(cloudPush,800);}
-async function cloudPush(){if(!cloudDoc||Date.now()<cloudHold)return;if(cloudBusy){cloudDirty=true;return;}cloudBusy=true;cloudDirty=false;try{await cloudDoc.set(payload());cloudSavedAt=Date.now();cloudErr='';cloudStatus='on';}catch(e){cloudHold=Date.now()+10000;cloudErr=errText(e);cloudStatus='write failed';}cloudBusy=false;if(cloudDirty)cloudSchedule();}
+async function cloudPush(){if(simMode)return;if(!cloudDoc||Date.now()<cloudHold)return;if(cloudBusy){cloudDirty=true;return;}cloudBusy=true;cloudDirty=false;try{await cloudDoc.set(payload());cloudSavedAt=Date.now();cloudErr='';cloudStatus='on';}catch(e){cloudHold=Date.now()+10000;cloudErr=errText(e);cloudStatus='write failed';}cloudBusy=false;if(cloudDirty)cloudSchedule();}
 function progress(s){return{gen:(s&&+s.gen)||0,spins:(s&&Array.isArray(s.hist))?s.hist.length:0,rev:(s&&+s.rev)||0,t:(s&&+s.updatedAt)||0};}
 function better(a,b){const A=progress(a),B=progress(b);if(A.gen!==B.gen)return A.gen>B.gen;if(A.spins!==B.spins)return A.spins>B.spins;if(A.rev!==B.rev)return A.rev>B.rev;return A.t>B.t;}
 function adopt(remote){if(spinning)return;const n=normState(remote);if(contentSig(n)===contentSig(state))return;state=n;hydrateTable();lastSig=contentSig(state);try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}selChip();render();}
@@ -715,7 +716,7 @@ WHEEL.forEach((n,i)=>{const s=-Math.PI/2+i*A-A/2;ctx.beginPath();ctx.moveTo(0,0)
 ctx.beginPath();ctx.arc(0,0,R-46*k,0,2*Math.PI);ctx.fillStyle='#262624';ctx.fill();ctx.beginPath();ctx.arc(0,0,R-50*k,0,2*Math.PI);ctx.fillStyle='#5f5e5a';ctx.fill();ctx.beginPath();ctx.arc(0,0,14*k,0,2*Math.PI);ctx.fillStyle='#f3c168';ctx.fill();ctx.restore();
 ctx.beginPath();ctx.arc(bR*Math.cos(bAng),bR*Math.sin(bAng),Math.max(3.5,6*k),0,2*Math.PI);ctx.fillStyle='#f1efe8';ctx.fill();
 ctx.beginPath();ctx.moveTo(-8*k,-R+1);ctx.lineTo(8*k,-R+1);ctx.lineTo(0,-R+17*k);ctx.closePath();ctx.fillStyle='#f3c168';ctx.fill();ctx.restore();}
-function spin(){if(spinning)return;if(!bets.size){msg('Place a bet first.','bad');return;}if(mode)setMode('');clearDolly();spinning=true;render();msg('No more bets…','');
+function spin(){if(spinning)return;if(simMode){simFromTable();return;}if(!bets.size){msg('Place a bet first.','bad');return;}if(mode)setMode('');clearDolly();spinning=true;render();msg('No more bets…','');
 const dr=drawPocket();pendingDraw=dr;const idx=dr.idx;
 const start=wAng,base=-idx*A,kk=Math.ceil((base-start)/(2*Math.PI)),target=base-2*Math.PI*(kk+5),dur=RM?700:4500,t0=performance.now();try{spinSnd(dur);}catch(e){}spinT0=t0;spinPreBal=state.balance;
 function fr(now){const t=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-t,3),eb=1-Math.pow(1-t,2.4);wAng=start+(target-start)*e;bAng=-Math.PI/2-2*Math.PI*7*(1-eb);const s=Math.max(0,(t-.55)/.45),sm=s*s*(3-2*s),k=R/115;bR=(R-8*k)-((R-8*k)-(R-38*k))*sm;draw();if(t<1)requestAnimationFrame(fr);else{spinning=false;try{resolve(WHEEL[idx]);}catch(err){failSafe(err);}}}
@@ -928,8 +929,17 @@ h+=`<div class="sparkwrap">${simChart(r.paths,B)}</div><div class="sparkwrap">${
 if(simSel.runs.length>1)h+=`<h3 class="sth">Compare your runs</h3><table class="stk sets"><tr><th>Run</th><th>Spins</th><th>Ahead</th><th>Broke</th><th>Avg</th><th>Typical</th><th>Hole</th></tr>${simSel.runs.map((x,i)=>`<tr${i?'':' class="cur"'}><td>${x.label}</td><td>${x.spins}</td><td>${x.ahead}</td><td>${x.broke}</td><td>${x.avg}</td><td>${x.med}</td><td>${x.hole}</td></tr>`).join('')}</table>`;
 h+=`<p class="stnote">1,000 sessions, each starting with $${money(B)}, drawn with the same random source as the real wheel. If the bank cannot cover a raised bet, the method drops back to the base bet; a session is broke when it cannot cover even that. Ran in ${ms} ms. Run it again and the numbers will move a little.</p>`;$('simout').innerHTML=h;}
 function openSim(){if(!$('simbank').value)$('simbank').value=Math.max(1,Math.floor(state.balance+[...bets.values()].reduce((a,b)=>a+b.amount,0)))||state.opts.bank;simForm();$('simpanel').hidden=false;}
-$('simbtn').addEventListener('click',openSim);$('simgo').addEventListener('click',simGo);['simclose','simclose2'].forEach(id=>$(id).addEventListener('click',()=>{$('simpanel').hidden=true;}));$('simpanel').addEventListener('click',e=>{if(e.target===$('simpanel'))$('simpanel').hidden=true;});
+$('simbtn').addEventListener('click',simEnter);$('simgo').addEventListener('click',simGo);['simclose','simclose2'].forEach(id=>$(id).addEventListener('click',()=>{$('simpanel').hidden=true;}));$('simpanel').addEventListener('click',e=>{if(e.target===$('simpanel'))$('simpanel').hidden=true;});
 
+/* ---------- Simulator table: the main table as a sandbox ---------- */
+let simMode=false,simStash=null;
+function simEnter(){if(spinning||simMode)return;if(mode)setMode('');save();simStash={st:normState(state),bets:[...bets.values()].map(b=>({key:b.key,nums:b.nums,pay:b.pay,amount:b.amount})),stack:stack.map(x=>Object.assign({},x))};simMode=true;
+const on=[...bets.values()].reduce((a,b)=>a+b.amount,0),bank=Math.max(1,Math.floor(+$('simbank').value||0)||state.opts.bank,Math.ceil(on));$('simbank').value=bank;state.put=bank;state.balance=Math.round((bank-on)*100)/100;state.lastWin=null;state.floor=null;
+document.body.classList.add('simmode');$('spin').textContent='Simulate';$('simexit').hidden=false;$('gearbtn').hidden=true;clearDolly();msg('Simulator table. Build or load a bet, then press Simulate. Nothing here touches your real money or statistics.','');render();layout();}
+function simExit(){if(!simMode)return;if(mode)setMode('');$('simpanel').hidden=true;const real=simStash.st;real.opts=state.opts;real.saved=state.saved;real.slotStats=state.slotStats;state=real;bets=new Map();simStash.bets.forEach(b=>bets.set(b.key,b));stack=simStash.stack.filter(p=>bets.has(p.key));simStash=null;simMode=false;
+document.body.classList.remove('simmode');$('spin').textContent='Spin';$('simexit').hidden=true;$('gearbtn').hidden=false;msg('Back to your game. Your balance and chips are as you left them.','');headApply();render();layout();save();}
+function simFromTable(){if(!bets.size){msg('Place a bet first, then press Simulate.','bad');return;}simSel.bet='table';const on=[...bets.values()].reduce((a,b)=>a+b.amount,0);$('simbank').value=Math.max(1,Math.round(state.balance+on));simForm();$('simpanel').hidden=false;simGo();}
+$('simexit').addEventListener('click',simExit);
 /* ---------- Casino tracker page ---------- */
 const CASL='ABCDEF';let casArm=false,casArmT=null,casMsg='';
 function casR(v){return Math.round(v*100)/100;}
