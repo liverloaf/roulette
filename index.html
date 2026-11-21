@@ -72,7 +72,7 @@ body[class*="bg-"]{background-attachment:fixed}
 .sh{font-family:var(--display);font-weight:500;font-size:15px;margin:12px 0 4px}
 .dlist{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 8px}
 .dlist span{min-width:26px;text-align:center;padding:3px 6px;border:1px solid var(--line);border-radius:7px;font-variant-numeric:tabular-nums;font-size:12px}
-#hx{position:fixed;inset:0;z-index:40;display:none;background:transparent;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:none;-webkit-user-select:none;user-select:none}
+#hx{position:fixed;inset:0;z-index:40;display:none;background:transparent;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .dlist button{min-width:44px;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-variant-numeric:tabular-nums}
 .dlist button.on{border-color:var(--gold);color:var(--gold);font-weight:600;background:rgba(212,175,55,.12)}
 .volrow{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin:2px 0 8px}.volrow input{width:190px;accent-color:var(--gold);touch-action:pan-x}.volrow output{min-width:38px;color:var(--cream);font-variant-numeric:tabular-nums}
@@ -102,7 +102,7 @@ canvas{display:block}
 .ghost:disabled,.mini:disabled,.slot:disabled,.acts button:disabled,#spin:disabled{opacity:.4}
 #right{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
 #boardwrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
-#grid{position:relative;flex:none;font-size:17px;touch-action:none}
+#grid{position:relative;flex:none;font-size:17px}
 .cell{position:absolute;border:1px solid var(--cream);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--display);font-weight:500;font-size:1em;user-select:none;-webkit-user-select:none;cursor:pointer}
 .cell.win{outline:3px solid var(--gold);outline-offset:-3px;box-shadow:inset 0 0 14px 3px rgba(244,200,80,.75)}
 .hit{position:absolute;top:1px;right:3px;font-family:var(--body);font-size:10px;font-weight:400;color:var(--gold);line-height:1}
@@ -463,7 +463,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='75';
+const VERSION='76';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 const HEAD=[
 {k:'net',n:'Net',g:'Money',d:'Your true win or loss, counting money you added',x:'Balance plus the chips on the table, minus everything you have put in (starting bank and every reload). Green with a plus means you are ahead; red with a minus means you are behind. Example: start with $100, reload $100, balance now $150. Net reads −50.'},
@@ -657,7 +657,7 @@ function selChip(){const want=normChips(state.opts&&state.opts.chips);if(rack.ch
 const SNDS=[['ding','Ding'],['click','Click'],['chip','Chip'],['bell','Bell'],['pop','Pop'],['off','Off']],TUNEL=[['off','Off'],['lounge','Lounge'],['blues','Blues'],['arcade','Arcade'],['calm','Calm']];
 const VOLK=['snd','spin','win','lose','tune'],BUS={};let OUT=null;function volMult(c){const v=state.opts&&state.opts.vol?+state.opts.vol[c]:50;return Math.pow(Math.max(0,Math.min(100,isFinite(v)?v:50))/50,1.5);}function bus(a,c){if(!BUS[c]){BUS[c]=a.createGain();BUS[c].connect(a.destination);}BUS[c].gain.value=volMult(c);return BUS[c];}
 let AC=null,tuneT=null,tuneOn=null,tuneStep=0,tuneNext=0,tuneG=null;
-function ac(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();}if(AC.state==='suspended')AC.resume();return AC;}catch(e){return null;}}
+function ac(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();}if(AC.state!=='running'){const p=AC.resume();if(p&&p.catch)p.catch(()=>{});}return AC;}catch(e){return null;}}
 function tone(a,f,t,dur,type,vol,dest,f2){const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g);g.connect(dest||OUT||a.destination);o.start(t);o.stop(t+dur+0.03);}
 function sndPlay(k){k=k||(state.opts&&state.opts.snd);if(!k||k==='off')return;const a=ac();if(!a)return;OUT=bus(a,'snd');const t=a.currentTime+0.005;
 if(k==='ding'){tone(a,1318,t,.32,'sine',.16);tone(a,1976,t,.22,'sine',.07);}else if(k==='click')tone(a,1500,t,.035,'square',.07);else if(k==='chip'){tone(a,2600,t,.03,'triangle',.16);tone(a,3400,t+.045,.03,'triangle',.12);}else if(k==='bell'){tone(a,880,t,.75,'sine',.14);tone(a,1760,t,.5,'sine',.06);tone(a,2637,t,.3,'sine',.03);}else if(k==='pop')tone(a,520,t,.09,'sine',.2,null,150);}
@@ -683,20 +683,25 @@ calm:{bpm:60,sw:0,w:'sine',bw:'sine',len:1.6,vol:.6,ch:[[48,[0,4,7,11]],[41,[0,4
 function tuneTick(){const a=AC,T=TUNES[tuneOn];if(!a||!T||a.state!=='running')return;const sp=30/T.bpm;if(tuneNext<a.currentTime)tuneNext=a.currentTime+0.05;while(tuneNext<a.currentTime+0.35){const i=tuneStep%8,c=T.ch[Math.floor(tuneStep/8)%T.ch.length],t=tuneNext+(i%2?T.sw*sp:0),ai=T.arp[i],bi=T.bass[i];if(ai>=0)tone(a,mf(c[0]+12+c[1][ai%c[1].length]),t,T.len,T.w,.5*T.vol,tuneG);if(bi>=0)tone(a,mf(c[0]-12+c[1][bi%c[1].length]),t,Math.max(.25,T.len),T.bw,.8*T.vol,tuneG);tuneStep++;tuneNext+=sp;}}
 function tuneStop(){clearInterval(tuneT);tuneT=null;tuneOn=null;if(tuneG&&AC){try{tuneG.gain.setTargetAtTime(0,AC.currentTime,.05);}catch(e){}}tuneG=null;}
 function tuneSync(){const k=(state.opts&&state.opts.tune)||'off';if(k===tuneOn)return;tuneStop();if(k==='off'||!TUNES[k])return;const a=ac();if(!a)return;tuneG=a.createGain();tuneG.gain.value=.2;tuneG.connect(bus(a,'tune'));tuneOn=k;tuneStep=0;tuneNext=0;tuneT=setInterval(tuneTick,90);}
-document.addEventListener('visibilitychange',()=>{try{if(!AC)return;if(document.hidden)AC.suspend();else if(tuneOn)AC.resume();}catch(e){}});
-document.addEventListener('click',e=>{const t=e.target;if(!t||!t.closest)return;if(Date.now()-swpAt<450)return;if(t.closest('button')||t.closest('#grid')){if(!(t.closest('#sndopts')||t.closest('#tuneopts')||t.closest('#spinopts')||t.closest('#winopts')||t.closest('#loseopts')))sndPlay();tuneSync();}},true);
+document.addEventListener('visibilitychange',()=>{try{if(!AC)return;const p=document.hidden?AC.suspend():(tuneOn?AC.resume():null);if(p&&p.catch)p.catch(()=>{});}catch(e){}});
+document.addEventListener('click',e=>{const t=e.target;if(!t||!t.closest)return;if(swpAt&&Date.now()-swpAt<350)return;if(t.closest('button')||t.closest('#grid')){if(!(t.closest('#sndopts')||t.closest('#tuneopts')||t.closest('#spinopts')||t.closest('#winopts')||t.closest('#loseopts')))sndPlay();tuneSync();}},true);
 function volPreview(c){if(c==='snd')sndPlay();else if(c==='spin')spinSnd(1200);else if(c==='win')winSnd();else if(c==='lose')loseSnd();}
 document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.v)return;const c=t.dataset.v;if(!state.opts.vol)state.opts.vol={};state.opts.vol[c]=+t.value;if(BUS[c])BUS[c].gain.value=volMult(c);const o=t.parentNode.querySelector('output');if(o)o.textContent=t.value+'%';});
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.v)return;render();volPreview(t.dataset.v);});
 function sndOpts(){document.querySelectorAll('input[data-v]').forEach(r=>{const v=state.opts.vol?state.opts.vol[r.dataset.v]:50;r.value=v;const o=r.parentNode.querySelector('output');if(o)o.textContent=v+'%';});[['sndopts',SNDS,'snd'],['spinopts',SPINL,'sndSpin'],['winopts',WINL,'sndWin'],['loseopts',LOSEL,'sndLose'],['tuneopts',TUNEL,'tune']].forEach(([id,list,key])=>{const box=$(id);box.innerHTML='';list.forEach(([k,name])=>{const b=document.createElement('button');b.textContent=name;const on=state.opts[key]===k;b.className=on?'on':'';b.setAttribute('aria-pressed',on);b.addEventListener('click',()=>{state.opts[key]=k;sndOpts();render();if(key==='snd')sndPlay(k);else if(key==='sndSpin')spinSnd(1600,k);else if(key==='sndWin')winSnd(k);else if(key==='sndLose')loseSnd(k);else tuneSync();});box.appendChild(b);});});}
 /* swipe a chip off the table */
 let swp=null,swpAt=0;
-function swipeKey(x,y){let el=null;try{if(hx)hx.style.pointerEvents='none';el=document.elementFromPoint(x,y);}finally{if(hx)hx.style.pointerEvents='';}if(!el||!el.closest||!el.closest('#grid'))return null;const o=el.closest('.ob');if(o)return Object.keys(outEl).find(k=>outEl[k]===o)||null;const rc=grid.getBoundingClientRect(),s=spot(x-rc.left,y-rc.top);return s?s.key:null;}
+function swipeKey(x,y){const rc=grid.getBoundingClientRect();if(x<rc.left||x>rc.right||y<rc.top||y>rc.bottom)return null;for(const k of Object.keys(outEl)){const r=outEl[k].getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return k;}const s=spot(x-rc.left,y-rc.top);return s?s.key:null;}
 function chipOff(key){const b=bets.get(key);if(!b||spinning)return false;state.balance=Math.round((state.balance+b.amount)*100)/100;bets.delete(key);stack=stack.filter(x=>x.key!==key);msg(`Took $${money(b.amount)} off ${spotName(b)||"that spot"}.`,'');haptic();sndPlay();render();return true;}
-document.addEventListener('pointerdown',e=>{swp=null;if(spinning||!bets.size||HXP.some(id=>!$(id).hidden))return;const k=swipeKey(e.clientX,e.clientY);if(k&&bets.has(k))swp={k,x:e.clientX,y:e.clientY};},true);
-document.addEventListener('pointerup',e=>{const s=swp;swp=null;if(!s)return;if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>=22&&chipOff(s.k)){swpAt=Date.now();e.preventDefault();}},true);
-document.addEventListener('pointercancel',()=>{swp=null;},true);
-document.addEventListener('click',e=>{if(Date.now()-swpAt<450){e.stopPropagation();e.preventDefault();}},true);
+function swpStart(x,y){swp=null;try{if(spinning||!bets.size||HXP.some(id=>!$(id).hidden)||!$('gearmenu').hidden)return;const k=swipeKey(x,y);if(k&&bets.has(k))swp={k,x,y};}catch(e){swp=null;}}
+function swpEnd(x,y){const s=swp;swp=null;if(!s)return;try{if(Math.hypot(x-s.x,y-s.y)>=24&&chipOff(s.k))swpAt=Date.now();}catch(e){}}
+let swpTouch=0;
+document.addEventListener('touchstart',e=>{swpTouch=Date.now();const t=e.touches;if(t.length!==1){swp=null;return;}swpStart(t[0].clientX,t[0].clientY);},{passive:true,capture:true});
+document.addEventListener('touchend',e=>{swpTouch=Date.now();const t=e.changedTouches;if(t&&t.length)swpEnd(t[0].clientX,t[0].clientY);else swp=null;},{passive:true,capture:true});
+document.addEventListener('touchcancel',()=>{swp=null;},{passive:true,capture:true});
+document.addEventListener('mousedown',e=>{if(Date.now()-swpTouch<800)return;swpStart(e.clientX,e.clientY);},true);
+document.addEventListener('mouseup',e=>{if(Date.now()-swpTouch<800)return;swpEnd(e.clientX,e.clientY);},true);
+document.addEventListener('click',e=>{if(swpAt&&Date.now()-swpAt<350){swpAt=0;e.stopPropagation();e.preventDefault();}},true);
 function statsWipe(){if(simMode&&simStash){const s=simStash.st;s.run={l:0,w:0};s.tot={bet:0,paid:0,wins:0,played:0,cum:0,peak:0,bigW:0};}LOG=[];logSave();state.run={l:0,w:0};state.tot={bet:0,paid:0,wins:0,played:0,cum:0,peak:0,bigW:0};state.slotStats=[0,1,2,3,4,5].map(()=>({spins:0,wins:0,net:0,bet:0,push:0,g:0}));}
 function haptic(){try{if(!state.opts||state.opts.haptic===false)return;if(navigator.vibrate)navigator.vibrate(30);}catch(e){}}
 document.addEventListener('click',e=>{const t=e.target;if(!navigator.vibrate||!t||!t.closest)return;if(t.closest('button')||t.closest('#grid'))haptic();},true);
