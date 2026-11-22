@@ -162,7 +162,8 @@ body.simmode #spin{background:var(--gold);border-color:var(--gold);color:#14301a
 #gearmenu button{display:flex;align-items:center;gap:10px;height:29px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--cream);font:inherit;font-size:13.5px;font-weight:600;text-align:left;white-space:nowrap}
 #gearmenu button svg{width:16px;height:16px;color:var(--gold);flex:none}
 #gearmenu button+button{box-shadow:0 -1px 0 rgba(241,239,232,.1)}
-#fairpanel,#streakpanel,#optpanel,#statpanel,#headpanel,#guidepanel,#syspanel,#simpanel,#caspanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.8);display:flex;align-items:center;justify-content:center;padding:14px}
+#fairpanel,#streakpanel,#optpanel,#statpanel,#headpanel,#guidepanel,#syspanel,#simpanel,#caspanel{position:fixed;inset:0;z-index:28;background:rgba(10,24,13,.86);display:flex;align-items:center;justify-content:center;padding:max(16px,calc(6px + env(safe-area-inset-top))) max(56px,calc(14px + env(safe-area-inset-right))) max(22px,calc(8px + env(safe-area-inset-bottom))) max(56px,calc(14px + env(safe-area-inset-left)))}
+#fairpanel .fcard,#streakpanel .fcard,#optpanel .fcard,#statpanel .fcard,#headpanel .fcard,#guidepanel .fcard,#syspanel .fcard,#simpanel .fcard,#caspanel .fcard{border:2px solid rgba(243,193,104,.6);box-shadow:0 0 0 4px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.55)}
 #fairpanel[hidden],#streakpanel[hidden],#optpanel[hidden],#statpanel[hidden],#headpanel[hidden],#guidepanel[hidden],#syspanel[hidden],#simpanel[hidden],#caspanel[hidden]{display:none}
 #caspanel{padding:6px}#caspanel .fcard{max-width:900px;width:100%;max-height:100%;border-color:rgba(243,193,104,.45);background:radial-gradient(120% 80% at 50% 0,#1c4126 0,#14301a 55%,#0f2614 100%);padding:10px 14px}
 .stgrid.g5{grid-template-columns:repeat(5,1fr)}
@@ -465,7 +466,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='79';
+const VERSION='80';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 const HEAD=[
 {k:'net',n:'Net',g:'Money',d:'Your true win or loss, counting money you added',x:'Balance plus the chips on the table, minus everything you have put in (starting bank and every reload). Green with a plus means you are ahead; red with a minus means you are behind. Example: start with $100, reload $100, balance now $150. Net reads −50.'},
