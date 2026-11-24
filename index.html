@@ -355,7 +355,7 @@ body.simmode #spin{background:var(--gold);border-color:var(--gold);color:#14301a
 <div id="headpanel" hidden role="dialog" aria-modal="true" aria-labelledby="headh">
   <div class="fcard">
     <div class="sthead"><h2 id="headh" style="font-family:var(--display);font-weight:500;font-size:20px;margin:0">Header options</h2><button class="ghost" id="headclose">Close</button></div>
-    <p style="margin:6px 0 0">Pick what shows across the top of the game. Tap a row to turn it on or off. Up to 7 fit next to your balance. <b id="headcount"></b>. <span id="headnote" style="color:var(--gold)"></span></p>
+    <p style="margin:6px 0 0">Pick what shows across the top of the game. Tap a row to turn it on or off. Up to 8 fit next to your balance. <b id="headcount"></b>. <span id="headnote" style="color:var(--gold)"></span></p>
     <div class="small" style="margin-top:6px"><button class="ghost" id="headguide">What do these mean?</button></div>
     <div class="hrows" id="headrows"></div>
     <div class="frow" style="justify-content:space-between"><button class="ghost" id="headdef">Back to default</button><button class="ghost" id="headclose2">Close</button></div>
@@ -467,7 +467,7 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 const dpr=window.devicePixelRatio||1;
 let CW=40,CH=44,OH=26;
 const EMPTY6=()=>[null,null,null,null,null,null];
-const VERSION='81';
+const VERSION='82';
 const CHIPSET=[0.5,1,2,3,5,10,25,50,100,500],DEN0=[1,5,10,25,50,100];let DEN=DEN0.slice();
 const HEAD=[
 {k:'net',n:'Net',g:'Money',d:'Your true win or loss, counting money you added',x:'Balance plus the chips on the table, minus everything you have put in (starting bank and every reload). Green with a plus means you are ahead; red with a minus means you are behind. Example: start with $100, reload $100, balance now $150. Net reads −50.'},
@@ -502,7 +502,7 @@ const HEAD=[
 {k:'spins',n:'Spins',g:'The wheel',d:'Total spins this game',x:'How many spins are in this game\'s history. The game keeps the most recent 1,000.'},
 {k:'hot',n:'Hot',g:'The wheel',d:'The number that has hit most',x:'The single most-hit number this game. Ties go to the one that hit most recently.'},
 {k:'cold',n:'Cold',g:'The wheel',d:'The number gone longest without hitting',x:'Also called a sleeper. The number with the most spins since it last hit; a number that has never hit counts as the longest.'}
-],HEADK=HEAD.map(x=>x.k),HEAD0=['bet','win'],HEADMAX=7;
+],HEADK=HEAD.map(x=>x.k),HEAD0=['bet','win'],HEADMAX=8;
 function normHead(a){if(!Array.isArray(a))return HEAD0.slice();return HEADK.filter(k=>a.includes(k)).slice(0,HEADMAX);}
 const ACTS=[['x2','2x','dbl',()=>dbl(2),'Double every bet'],['x3','3x','act_x3',()=>dbl(3),'Triple every bet'],['+1','+1','plus1',()=>plusOne(1),'Add 1 chip to every spot'],['+2','+2','act_p2',()=>plusOne(2),'Add 2 chips to every spot'],['+3','+3','act_p3',()=>plusOne(3),'Add 3 chips to every spot'],['-1','−1','minus1',()=>minusOne(1),'Take 1 chip off every spot'],['-2','−2','act_m2',()=>minusOne(2),'Take 2 chips off every spot'],['-3','−3','act_m3',()=>minusOne(3),'Take 3 chips off every spot']],ACT0=['x2','+1'],ACTMAX=4;let actSig=null;
 function normActs(a){if(!Array.isArray(a))return ACT0.slice();return ACTS.map(x=>x[0]).filter(k=>a.includes(k)).slice(0,ACTMAX);}
